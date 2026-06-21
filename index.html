@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>套一套 · 措辞配方</title>
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface2:#f1efe9; --line:rgba(0,0,0,.10); --line2:rgba(0,0,0,.20);
+  --text:#22221f; --muted:#6b6a64; --hint:#9b9a92;
+  --accent:#534ab7; --accent-bg:#eeedfe; --accent-text:#3c3489;
+  --ok:#0f6e56; --ok-bg:#e1f5ee; --warn:#854f0b; --warn-bg:#faeeda; --bad:#a32d2d; --bad-bg:#fcebeb;
+  --radius:10px; --radius-sm:8px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#1a1a18; --surface:#232320; --surface2:#2c2c28; --line:rgba(255,255,255,.12); --line2:rgba(255,255,255,.24);
+    --text:#ececea; --muted:#a8a79f; --hint:#76756d;
+    --accent:#afa9ec; --accent-bg:#2a2747; --accent-text:#cecbf6;
+    --ok:#5dcaa5; --ok-bg:#0f3a30; --warn:#efc; --warn-bg:#3a2c0c; --bad:#f09595; --bad-bg:#3a1414;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+header h1{font-size:21px;font-weight:600;margin:0}
+header .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.principle{margin:14px 0 4px;padding:10px 14px;background:var(--accent-bg);color:var(--accent-text);border-radius:var(--radius-sm);font-size:13px}
+nav.tabs{display:flex;gap:8px;margin:16px 0 14px;flex-wrap:wrap}
+nav.tabs button{font:inherit;font-size:14px;padding:7px 16px;border-radius:var(--radius-sm);border:.5px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+nav.tabs button.on{background:var(--surface);color:var(--text);border-color:var(--line2);font-weight:500}
+.view{display:none}
+.view.on{display:block}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.seg{display:inline-flex;border:.5px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.seg button{font:inherit;font-size:13px;padding:6px 14px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--accent-bg);color:var(--accent-text);font-weight:500}
+.spacer{flex:1}
+button.btn{font:inherit;font-size:13px;padding:7px 14px;border-radius:var(--radius-sm);border:.5px solid var(--line2);background:var(--surface);color:var(--text);cursor:pointer}
+button.btn:hover{background:var(--surface2)}
+button.btn.pri{background:var(--accent);color:#fff;border-color:transparent}
+button.btn.ghost{border-color:var(--line);color:var(--muted)}
+button.btn.sm{font-size:12px;padding:4px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--surface);border:.5px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+.card .name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card .tag{font-size:11px;color:var(--hint);border:.5px solid var(--line);border-radius:20px;padding:1px 8px;font-weight:400}
+.card .heart{font-size:13px;color:var(--muted);margin-top:5px}
+.card .when{font-size:12px;color:var(--accent-text);background:var(--accent-bg);display:inline-block;padding:2px 8px;border-radius:6px;margin-top:8px}
+.ex{font-size:12.5px;color:var(--text);margin-top:9px;padding-top:9px;border-top:.5px solid var(--line)}
+.ex .row{margin:3px 0;color:var(--muted)}
+.ex .row b{color:var(--text);font-weight:500}
+.ex .arr{color:var(--accent);margin:0 4px}
+.card .ops{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
+.mynote{margin-top:11px;padding-top:10px;border-top:.5px solid var(--line)}
+.mynote:empty{display:none}
+.mn-label{font-size:11px;color:var(--accent-text);font-weight:500}
+.mn-text{font-size:12.5px;color:var(--text);white-space:pre-wrap;margin-top:2px}
+.mn-text.diag{color:var(--muted)}
+.notepanel{margin-top:11px;padding-top:11px;border-top:.5px solid var(--line2)}
+.np-l{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.np-sub{display:block;font-size:11px;color:var(--hint);font-weight:400;margin-top:1px}
+.na{min-height:62px;font-size:13px;line-height:1.5}
+.na.pr{min-height:96px;background:var(--surface2);color:var(--muted);font-size:12px}
+.np-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.diagbox{margin-top:10px}
+.np-hint{font-size:12px;background:var(--accent-bg);color:var(--accent-text);padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:8px}
+.tip-mine{color:var(--accent-text)}
+.mindbox{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:14px 15px;margin-bottom:14px}
+.mind-head{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.mind-sub{font-size:12px;color:var(--hint);font-weight:400}
+.variants{margin:12px 0}
+.variants .vlab{font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.vitem{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:6px;font-size:14px;line-height:1.5;cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+.vitem:hover{background:var(--surface2)}
+.vitem.on{border-color:var(--accent);background:var(--accent-bg)}
+.vitem .vnum{font-size:11px;color:var(--accent-text);background:var(--accent-bg);border-radius:20px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px}
+.vitem.on .vnum{background:var(--accent);color:#fff}
+.empty{background:var(--surface);border:.5px dashed var(--line2);border-radius:var(--radius);padding:26px 18px;text-align:center;color:var(--muted);font-size:13px;grid-column:1/-1}
+.form{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.form h3{margin:0 0 12px;font-size:15px;font-weight:600}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:.5px solid var(--line2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text)}
+textarea{resize:vertical;min-height:60px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.ftbl{background:var(--surface);border:.5px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.ftbl .tr{display:grid;grid-template-columns:104px 1fr;border-bottom:.5px solid var(--line)}
+.ftbl .tr:last-child{border-bottom:0}
+.ftbl .th{padding:10px 12px;background:var(--surface2);color:var(--muted);font-size:13px;display:flex;align-items:center}
+.ftbl .th.slot{background:var(--accent-bg);color:var(--accent-text)}
+.ftbl .td{padding:7px 10px;display:flex;align-items:center}
+.ftbl .td input,.ftbl .td select{border:0;background:transparent;padding:4px 2px}
+.ftbl .td input:focus,.ftbl .td select:focus{box-shadow:none}
+.tip{font-size:12.5px;color:var(--muted);background:var(--surface2);border-radius:var(--radius-sm);padding:9px 12px;margin:12px 0}
+.tip b{color:var(--accent-text)}
+.outwrap{margin-top:6px}
+.outwrap .lab{font-size:12px;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+#outBox{min-height:60px;font-size:15px;line-height:1.65}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:11px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:22px;font-weight:600;margin-top:2px}
+.bars{margin-bottom:18px}
+.bar{display:flex;align-items:center;gap:10px;font-size:12.5px;margin:5px 0}
+.bar .bn{width:84px;color:var(--muted);text-align:right;flex:none}
+.bar .bt{height:11px;background:var(--accent-bg);border-radius:4px;min-width:3px}
+.bar .bt.fill{background:var(--accent)}
+.bar .bc{color:var(--hint);flex:none}
+.logitem{background:var(--surface);border:.5px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px}
+.logitem .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
+.logitem .who{font-weight:500}
+.logitem .badge{font-size:11px;color:var(--accent-text);background:var(--accent-bg);padding:2px 9px;border-radius:20px}
+.logitem .txt{font-size:13px;color:var(--muted);margin-top:7px}
+.logitem .txt .o{color:var(--text)}
+.logitem .arr{color:var(--accent);margin:0 5px}
+.logitem .ft{display:flex;justify-content:space-between;align-items:center;margin-top:9px;gap:8px}
+.logitem .ft .time{font-size:11px;color:var(--hint)}
+.eff{font-size:12px;padding:4px 8px;border-radius:6px;border:.5px solid var(--line2);background:var(--surface)}
+.eff[data-v="成功"]{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.eff[data-v="一般"]{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.eff[data-v="失败"]{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+.io{display:flex;gap:8px;margin-top:18px;padding-top:16px;border-top:.5px solid var(--line)}
+.hidden{display:none}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:13px;padding:9px 18px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+.toast.show{opacity:.95}
+@media (max-width:560px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>套一套 · 措辞配方</h1>
+    <div class="sub">把"我想要"说成"对你有好处"</div>
+  </header>
+  <div class="principle">核心原则：别从自己出发——先揣摩对方的心，再用"对他有利"的措辞说。</div>
+
+  <nav class="tabs">
+    <button data-tab="lib" class="on">配方库</button>
+    <button data-tab="compose">套一套</button>
+    <button data-tab="review">复盘</button>
+  </nav>
+
+  <!-- ============ 配方库 ============ -->
+  <section id="lib" class="view on">
+    <div class="toolbar">
+      <div class="seg" id="catSeg">
+        <button data-cat="切口" class="on">切口</button>
+        <button data-cat="警句技巧">警句技巧</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="batchDiagBtn">全部理解 → Claude 诊断</button>
+      <button class="btn" id="addBtn">+ 添加配方</button>
+    </div>
+
+    <div class="form hidden" id="recipeForm">
+      <h3 id="formTitle">添加配方</h3>
+      <div class="field"><label>分类</label>
+        <select id="fCat"><option>切口</option><option>警句技巧</option></select></div>
+      <div class="field"><label>名称</label><input id="fName" placeholder="例：赤裸裸法"></div>
+      <div class="field"><label>一句话心法</label><input id="fHeart" placeholder="例：把藏起来的真心话直接喊出来"></div>
+      <div class="field"><label>适用场景（选填）</label><input id="fWhen" placeholder="例：想让一句话有冲击力时"></div>
+      <div class="field"><label>例子（每行一条，用 → 分隔「原话 → 改写」）</label>
+        <textarea id="fEx" style="min-height:170px" placeholder="今天很开心 → 今天，开心到想哭&#10;喔喔，真是我的挚友啊 → …&#10;一行一条，回车换行"></textarea></div>
+      <div class="actions">
+        <button class="btn ghost" id="formCancel">取消</button>
+        <button class="btn pri" id="formSave">保存</button>
+      </div>
+    </div>
+
+    <div class="grid" id="libGrid"></div>
+  </section>
+
+  <!-- ============ 套一套 ============ -->
+  <section id="compose" class="view">
+
+    <div class="mindbox">
+      <div class="mind-head">① 对方心思分析<span class="mind-sub">先揣摩对方的心，再决定怎么说</span></div>
+      <div class="ftbl">
+        <div class="tr"><div class="th">对谁说 / 关系</div><div class="td"><input id="m_who" placeholder="例：老王（直属上级）"></div></div>
+        <div class="tr"><div class="th">想让TA做</div><div class="td"><input id="m_ask" placeholder="例：周五前定下方案"></div></div>
+        <div class="tr"><div class="th slot">TA在乎什么</div><div class="td"><input id="m_care" placeholder="TA的目标 / 利益 / 面子…"></div></div>
+        <div class="tr"><div class="th slot">TA担心/讨厌</div><div class="td"><input id="m_fear" placeholder="TA怕什么 / 不想要什么…"></div></div>
+        <div class="tr"><div class="th slot">TA现在状态</div><div class="td"><input id="m_state" placeholder="忙 / 有压力 / 心情…（选填）"></div></div>
+      </div>
+      <div class="np-actions"><button class="btn pri sm" id="mindBtn">让 Claude 分析对方心思 + 荐配方</button></div>
+      <div class="diagbox hidden" id="mindBox">
+        <div class="np-hint">分析提示词已复制 → 贴进 Claude（这里 / claude.ai / Claude Code）。复制失败就手选下面这段：</div>
+        <textarea id="mindPromptBox" class="na pr" readonly placeholder="点上面按钮后这里出现提示词…"></textarea>
+        <label class="np-l">把 Claude 的分析贴回来（选填，边看边套）</label>
+        <textarea id="mindResultBox" class="na" placeholder="粘贴对方心思分析 + 推荐配方…"></textarea>
+      </div>
+    </div>
+
+    <div class="field" style="max-width:340px">
+      <label>② 用哪个配方</label>
+      <select id="recipeSel"></select>
+    </div>
+
+    <div class="ftbl" id="composeTbl"></div>
+
+    <div class="tip" id="composeTip"></div>
+
+    <div class="variants hidden" id="variantsBox">
+      <div class="vlab">③ 挑个说法 · 多个变体（点一个 → 进下面可改）</div>
+      <div id="variantsList"></div>
+    </div>
+
+    <div class="outwrap">
+      <div class="lab"><span>最终版（可手改）</span><button class="btn ghost sm" id="regen">重置为变体 1</button></div>
+      <textarea id="outBox" placeholder="填上面的格子，这里会自动拼出说法…"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost" id="clearBtn">清空</button>
+      <button class="btn" id="copyBtn">复制</button>
+      <button class="btn pri" id="saveBtn">存进复盘</button>
+    </div>
+  </section>
+
+  <!-- ============ 复盘 ============ -->
+  <section id="review" class="view">
+    <div class="stats" id="statCards"></div>
+    <div class="bars" id="usageBars"></div>
+    <div id="logList"></div>
+    <div class="io">
+      <button class="btn" id="exportBtn">导出备份(JSON)</button>
+      <button class="btn" id="importBtn">导入</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden">
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ---------- 内置「切口」配方（每招多个变体 tpls） ---------- */
+var BUILTIN = [
+  {id:"b_tqsh",cat:"切口",name:"投其所好",heart:'把"我想要"翻成"对你有好处"',when:"想让对方答应一个请求 / 做选择",
+   ex:[["就剩最后一件衬衫","这件卖得特别好，就剩最后一件了"],["只有鱼了","今天供应的是头等舱才有的好鱼，还有普通牛肉，您看？"],["做高价型号吧","咱们来做贵公司的旗舰款吧"]],
+   slots:[{key:"good",label:"对TA的好处",ph:"例：这是限量 / 对你更省事"}],
+   tpls:["{who}，{ask}吧——这样{good}。","{who}，其实{ask}对你更划算：{good}。","{who}，{ask}，{good}，对你只有好处。"]},
+  {id:"b_jqse",cat:"切口",name:"儆其所恶",heart:'别说"你别做X"，点出"做了会有你讨厌的后果"',when:"适合说服难说服的人 / 硬规定不管用时",
+   ex:[["请勿触碰展品","展品有农药残留，请勿触碰"],["请合上马桶盖","听说不合马桶盖的人会漏财哦"],["别打扰客人","小心别受伤（站对方视角）"],["偷窃可耻","多谢大家帮忙，小偷已抓到，感谢配合"]],
+   slots:[{key:"bad",label:"TA讨厌的后果",ph:"例：会漏财 / 会受伤"}],
+   tpls:["{who}，最好{ask}，不然{bad}。","{who}，提醒一下，不{ask}的话可能{bad}。","{who}，{ask}吧，省得{bad}。"]},
+  {id:"b_xzzy",cat:"切口",name:"选择的自由",heart:'不问"要不要"，问"要A还是B"——选哪个都达成你的目的',when:"想推进一件对方可能拒绝的事",
+   ex:[["来吃饭吗？","甜点有提拉米苏和抹茶布丁，你想吃哪个？"],["要买吗？","你更喜欢 A 款还是 B 款？"],["去不去聚餐","这顿吃 X 家还是 Y 家？（选了就等于来）"]],
+   slots:[{key:"a",label:"选项 A",ph:"…"},{key:"b",label:"选项 B",ph:"…"}],
+   tpls:["{who}，你想{a}，还是{b}？","{who}，{a}和{b}，你选哪个？","{who}，你看是{a}，还是{b}，哪个都行。"]},
+  {id:"b_bryl",cat:"切口",name:"被认可欲",heart:'把"帮我做"换成"只有你能做得这么好"',when:"请人帮忙 / 给人派活",
+   ex:[["擦下窗户","你个子高够得着，能把窗户擦得特别亮，拜托啦"],["你来讲","客户都在期待听你亲自讲"],["拉住我的手","我一个人有点怕，你能牵我一起过马路吗？"]],
+   slots:[{key:"merit",label:"对方的优点 / 能力",ph:"例：细心 / 够得着 / 讲得好"}],
+   tpls:["{who}，你{merit}，{ask}，拜托啦。","{who}，这事得你来——你{merit}，{ask}最合适。","{who}，就你{merit}，{ask}就靠你了。"]},
+  {id:"b_fnbk",cat:"切口",name:"非你不可",heart:'把"请你来"换成"别人不行，非你不可"',when:"邀约 / 想让对方感到专属",
+   ex:[["你来酒会吧","你不来就不热闹了，这场非你不可，务必来"],["我们给你换","我们只为您一位免费更换"]],
+   slots:[],
+   tpls:["{who}，这事非你不可，{ask}，就靠你了。","{who}，别人我信不过，{ask}必须是你。","{who}，只有你能搞定，{ask}拜托了。"]},
+  {id:"b_tdh",cat:"切口",name:"团队化",heart:'用"咱们一起"代替"你/你们去做"',when:"想拉对方入伙 / 化解对立",
+   ex:[["你们组织酒会","咱们一起办个酒会吧！"],["请听巡警的","巡警也是你们的队友，听队友的话"],["陪我夜跑","我想夜跑但一个人怕，你能陪我一起跑吗？"]],
+   slots:[],
+   tpls:["{who}，咱们一起{ask}吧！","{who}，这事咱俩一块儿弄，{ask}。","{who}，咱们搭把手，一起{ask}。"]},
+  {id:"b_gx",cat:"切口",name:"感谢",heart:'请求后加一句"谢谢"，触发互惠，对方更难拒绝',when:"任何请求的收尾",
+   ex:[["把这桌子搬走","帮我把这桌子搬走，谢谢！"],["请高抬贵手","请允许我献上这份真心作品，还请高抬贵手，谢谢"]],
+   slots:[],
+   tpls:["{who}，麻烦{ask}，谢谢你～","{who}，{ask}就拜托了，真的谢谢！","辛苦{who}，帮我{ask}，感激不尽～"]}
+];
+
+/* ---------- 存储（server 后端 + git 多机同步；notes 为数组）---------- */
+var userRecipes=[], logs=[], notes=[];   /* notes: [{id,u,u_at,d,d_at}] */
+function api(method,path,body){
+  return fetch(path,{method:method,headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined})
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .catch(function(e){toast("⚠ 保存失败（server 没起？）");throw e;});
+}
+function loadAll(){
+  return fetch("/data").then(function(r){return r.json();}).then(function(d){
+    userRecipes=(d.recipes||[]).filter(function(x){return x.id&&x.id.indexOf("b_")!==0;});
+    logs=(d.logs||[]).sort(function(a,b){return (b.time||"").localeCompare(a.time||"");});
+    notes=d.notes||[];
+  });
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function allRecipes(){return BUILTIN.concat(userRecipes);}
+function findRecipe(id){return allRecipes().filter(function(r){return r.id===id;})[0];}
+function noteOf(id){for(var i=0;i<notes.length;i++){if(notes[i].id===id)return notes[i];}return {};}
+function setNoteLocal(id,patch){var n=noteOf(id);if(!n.id){n={id:id,u:"",d:""};notes.push(n);}for(var k in patch)n[k]=patch[k];return n;}
+function hasTpls(r){return r&&r.tpls&&r.tpls.length;}
+function esc(s){return (s||"").replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+
+/* ---------- 通用 ---------- */
+function $(s){return document.querySelector(s);}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove("show");},1700);}
+function copy(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast("提示词已复制，去 Claude 粘贴");},function(){toast("已生成，请在框里手动复制");});
+  }else{toast("已生成，请在框里手动复制");}
+}
+
+/* tabs */
+document.querySelectorAll("nav.tabs button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("nav.tabs button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");
+    document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on");});
+    $("#"+b.dataset.tab).classList.add("on");
+    if(b.dataset.tab==="review")renderReview();
+    if(b.dataset.tab==="compose")renderCompose();
+  };
+});
+
+/* ---------- 诊断提示词 ---------- */
+function diagPrompt(r,understanding){
+  var ex=(r.ex||[]).map(function(e){return e[0]+" → "+e[1];}).join("；");
+  return "我在练一套说服 / 措辞技巧（把请求说到对方心坎上），请你当教练，诊断我对其中一个配方的理解。\n\n"+
+    "【配方】"+r.name+"\n"+
+    "【心法】"+(r.heart||"")+"\n"+
+    (ex?"【例子】"+ex+"\n":"")+
+    "【我的理解 / 判断】"+understanding+"\n\n"+
+    "请直接诊断，别客套：1) 哪里理解到位；2) 哪里有偏差或太浅；3) 补一个我没想到的使用场景或反例；4) 用一句话点出这招的精髓。";
+}
+function summaryHtml(id){
+  var n=noteOf(id);if(!n.u&&!n.d)return "";
+  var h="";
+  if(n.u)h+='<div class="mn-label">我的理解</div><div class="mn-text">'+esc(n.u)+'</div>';
+  if(n.d)h+='<div class="mn-label" style="margin-top:7px">Claude 诊断</div><div class="mn-text diag">'+esc(n.d)+'</div>';
+  return h;
+}
+
+/* ---------- 配方库 ---------- */
+var curCat="切口", editId=null;
+document.querySelectorAll("#catSeg button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("#catSeg button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");curCat=b.dataset.cat;renderLib();
+  };
+});
+function renderLib(){
+  var list=allRecipes().filter(function(r){return r.cat===curCat;});
+  var g=$("#libGrid");
+  if(!list.length){
+    g.innerHTML='<div class="empty">「'+curCat+'」还没有内容。<br>点右上「+ 添加配方」自己录入，<br>或把整理好的文案发给 Claude 写进默认值（这样两台 Mac + 手机都同步）。</div>';
+    return;
+  }
+  g.innerHTML=list.map(function(r){
+    var builtin=r.id.indexOf("b_")===0;
+    var exHtml=(r.ex||[]).slice(0,3).map(function(e){
+      return '<div class="row"><b>'+esc(e[0])+'</b><span class="arr">→</span>'+esc(e[1])+'</div>';
+    }).join("");
+    var n=noteOf(r.id);
+    return '<div class="card">'+
+      '<div class="name">'+esc(r.name)+(builtin?'<span class="tag">内置</span>':'')+'</div>'+
+      (r.heart?'<div class="heart">'+esc(r.heart)+'</div>':'')+
+      (r.when?'<div class="when">'+esc(r.when)+'</div>':'')+
+      (exHtml?'<div class="ex">'+exHtml+'</div>':'')+
+      '<div class="mynote" id="sum_'+r.id+'">'+summaryHtml(r.id)+'</div>'+
+      '<div class="ops">'+
+        '<button class="btn sm" data-use="'+r.id+'">用这个套一套</button>'+
+        '<button class="btn sm ghost" data-note="'+r.id+'">我的理解 / 诊断</button>'+
+        (builtin?'':'<button class="btn sm ghost" data-edit="'+r.id+'">编辑</button><button class="btn sm ghost" data-del="'+r.id+'">删除</button>')+
+      '</div>'+
+      '<div class="notepanel hidden" id="np_'+r.id+'">'+
+        '<label class="np-l">我的理解 / 判断<span class="np-sub">这招你怎么理解、什么时候用、跟你工作/生活里哪件事对得上</span></label>'+
+        '<textarea id="nu_'+r.id+'" class="na" placeholder="写下你的理解…">'+esc(n.u||"")+'</textarea>'+
+        '<div class="np-actions">'+
+          '<button class="btn sm" data-saveu="'+r.id+'">保存理解</button>'+
+          '<button class="btn sm pri" data-diag="'+r.id+'">让 Claude 诊断</button>'+
+        '</div>'+
+        '<div class="diagbox '+(n.d?'':'hidden')+'" id="db_'+r.id+'">'+
+          '<div class="np-hint">点「让 Claude 诊断」会复制一段提示词 → 去 Claude（这里 / claude.ai / Claude Code）粘贴。复制失败就手选下面这段：</div>'+
+          '<textarea id="pr_'+r.id+'" class="na pr" readonly placeholder="点诊断后这里出现提示词…"></textarea>'+
+          '<label class="np-l">把 Claude 的诊断贴回来存档（选填）</label>'+
+          '<textarea id="nd_'+r.id+'" class="na" placeholder="粘贴诊断结果…">'+esc(n.d||"")+'</textarea>'+
+          '<div class="np-actions"><button class="btn sm" data-saved="'+r.id+'">保存诊断</button></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+  g.querySelectorAll("[data-use]").forEach(function(b){b.onclick=function(){gotoCompose(b.dataset.use);};});
+  g.querySelectorAll("[data-edit]").forEach(function(b){b.onclick=function(){openForm(b.dataset.edit);};});
+  g.querySelectorAll("[data-del]").forEach(function(b){b.onclick=function(){
+    if(confirm("删除这个配方？")){var did=b.dataset.del;userRecipes=userRecipes.filter(function(x){return x.id!==did;});notes=notes.filter(function(n){return n.id!==did;});api("DELETE","/recipes/"+did);renderLib();}
+  };});
+  g.querySelectorAll("[data-note]").forEach(function(b){b.onclick=function(){toggleNote(b.dataset.note);};});
+  g.querySelectorAll("[data-saveu]").forEach(function(b){b.onclick=function(){
+    var id=b.dataset.saveu;var uv=$("#nu_"+id).value.trim();setNoteLocal(id,{u:uv});api("PUT","/notes/"+id,{u:uv});$("#sum_"+id).innerHTML=summaryHtml(id);toast("已保存理解");
+  };});
+  g.querySelectorAll("[data-diag]").forEach(function(b){b.onclick=function(){
+    var id=b.dataset.diag;var u=$("#nu_"+id).value.trim();
+    if(!u){toast("先写下你的理解");return;}
+    setNoteLocal(id,{u:u});api("PUT","/notes/"+id,{u:u});$("#sum_"+id).innerHTML=summaryHtml(id);
+    var p=diagPrompt(findRecipe(id),u);$("#db_"+id).classList.remove("hidden");$("#pr_"+id).value=p;copy(p);
+  };});
+  g.querySelectorAll("[data-saved]").forEach(function(b){b.onclick=function(){
+    var id=b.dataset.saved;var dv=$("#nd_"+id).value.trim();setNoteLocal(id,{d:dv});api("PUT","/notes/"+id,{d:dv});$("#sum_"+id).innerHTML=summaryHtml(id);toast("已存诊断");
+  };});
+}
+function toggleNote(id){
+  var p=$("#np_"+id),s=$("#sum_"+id);
+  var willShow=p.classList.contains("hidden");
+  p.classList.toggle("hidden");
+  if(s)s.classList.toggle("hidden",willShow);
+}
+$("#batchDiagBtn").onclick=function(){
+  var items=allRecipes().filter(function(r){return noteOf(r.id).u;});
+  if(!items.length){toast("还没填写任何理解");return;}
+  var body=items.map(function(r,i){
+    var ex=(r.ex||[]).map(function(e){return e[0]+" → "+e[1];}).join("；");
+    return (i+1)+". 【"+r.name+"】心法："+(r.heart||"")+(ex?"｜例："+ex:"")+"\n   我的理解："+noteOf(r.id).u;
+  }).join("\n\n");
+  var p="我在练一套说服 / 措辞技巧，下面是几个配方和我各自的理解，请你当教练逐条诊断（哪里到位 / 哪里偏浅 / 补个场景或反例 / 一句话精髓），直接点别客套：\n\n"+body;
+  copy(p);
+};
+$("#addBtn").onclick=function(){openForm(null);};
+$("#formCancel").onclick=function(){$("#recipeForm").classList.add("hidden");};
+function openForm(id){
+  editId=id;
+  var f=$("#recipeForm");f.classList.remove("hidden");
+  $("#formTitle").textContent=id?"编辑配方":"添加配方";
+  if(id){
+    var r=findRecipe(id);
+    $("#fCat").value=r.cat;$("#fName").value=r.name;$("#fHeart").value=r.heart||"";$("#fWhen").value=r.when||"";
+    $("#fEx").value=(r.ex||[]).map(function(e){return e[0]+" → "+e[1];}).join("\n");
+  }else{
+    $("#fCat").value=curCat;$("#fName").value="";$("#fHeart").value="";$("#fWhen").value="";$("#fEx").value="";
+  }
+  f.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+$("#formSave").onclick=function(){
+  var name=$("#fName").value.trim();
+  if(!name){toast("名称不能为空");return;}
+  var ex=$("#fEx").value.split("\n").map(function(l){return l.trim();}).filter(Boolean).map(function(l){
+    var p=l.split(/→|=>/);return [(p[0]||"").trim(),(p[1]||"").trim()];
+  }).filter(function(e){return e[0];});
+  var obj={cat:$("#fCat").value,name:name,heart:$("#fHeart").value.trim(),when:$("#fWhen").value.trim(),ex:ex,slots:[],tpls:null};
+  if(editId){
+    obj.id=editId;
+    userRecipes=userRecipes.map(function(x){return x.id===editId?obj:x;});
+    api("PATCH","/recipes/"+editId,obj);
+  }else{
+    obj.id=uid();userRecipes.push(obj);
+    api("POST","/recipes",obj);
+  }
+  $("#recipeForm").classList.add("hidden");
+  curCat=obj.cat;
+  document.querySelectorAll("#catSeg button").forEach(function(x){x.classList.toggle("on",x.dataset.cat===curCat);});
+  renderLib();toast("已保存");
+};
+
+/* ---------- 套一套 ---------- */
+var state={recipeId:null,base:{who:"",ask:"",raw:""},mind:{care:"",fear:"",state:"",result:""},slots:{},free:"",dirty:false};
+function gotoCompose(id){
+  state.recipeId=id;state.slots={};state.free="";state.dirty=false;
+  document.querySelectorAll("nav.tabs button").forEach(function(x){x.classList.toggle("on",x.dataset.tab==="compose");});
+  document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on");});
+  $("#compose").classList.add("on");
+  renderCompose();
+}
+function renderRecipeSel(){
+  var sel=$("#recipeSel");
+  var groups={"切口":[],"警句技巧":[]};
+  allRecipes().forEach(function(r){(groups[r.cat]=groups[r.cat]||[]).push(r);});
+  var html="";
+  Object.keys(groups).forEach(function(cat){
+    if(!groups[cat].length)return;
+    html+='<optgroup label="'+cat+'">'+groups[cat].map(function(r){
+      return '<option value="'+r.id+'">'+esc(r.name)+'</option>';
+    }).join("")+'</optgroup>';
+  });
+  sel.innerHTML=html;
+  if(!state.recipeId)state.recipeId=allRecipes()[0]&&allRecipes()[0].id;
+  sel.value=state.recipeId;
+}
+function syncMindInputs(){
+  $("#m_who").value=state.base.who;
+  $("#m_ask").value=state.base.ask;
+  $("#m_care").value=state.mind.care;
+  $("#m_fear").value=state.mind.fear;
+  $("#m_state").value=state.mind.state;
+  $("#mindResultBox").value=state.mind.result;
+}
+function renderCompose(){
+  renderRecipeSel();
+  syncMindInputs();
+  var r=findRecipe(state.recipeId);if(!r)return;
+  var rows="";
+  rows+=trRow("我的原话","raw",state.base.raw,"你直觉会怎么说（选填）",false);
+  if(hasTpls(r)){
+    (r.slots||[]).forEach(function(s){
+      rows+=trRow(s.label,"slot:"+s.key,state.slots[s.key]||"",s.ph||"",true);
+    });
+  }
+  $("#composeTbl").innerHTML=rows;
+  $("#composeTbl").querySelectorAll("input").forEach(function(inp){
+    inp.oninput=function(){
+      var f=inp.dataset.f;
+      if(f.indexOf("slot:")===0)state.slots[f.slice(5)]=inp.value;
+      else state.base[f]=inp.value;
+      syncOut();
+    };
+  });
+  var ex0=(r.ex&&r.ex[0])?('<br>例：'+esc(r.ex[0][0])+' → '+esc(r.ex[0][1])):"";
+  var nu=noteOf(r.id).u;
+  $("#composeTip").innerHTML='<b>'+esc(r.name)+'</b>：'+esc(r.heart||"")+ex0+(nu?'<br><span class="tip-mine">我的理解：'+esc(nu)+'</span>':"");
+  syncOut();
+}
+function trRow(label,field,val,ph,slot){
+  return '<div class="tr"><div class="th'+(slot?" slot":"")+'">'+esc(label)+'</div>'+
+    '<div class="td"><input data-f="'+field+'" value="'+esc(val)+'" placeholder="'+esc(ph)+'"></div></div>';
+}
+function variants(){
+  var r=findRecipe(state.recipeId);
+  if(!hasTpls(r))return [];
+  var map={who:state.base.who,ask:state.base.ask,raw:state.base.raw};
+  (r.slots||[]).forEach(function(s){map[s.key]=state.slots[s.key];});
+  return r.tpls.map(function(t){
+    return t.replace(/\{(\w+)\}/g,function(m,k){return (map[k]&&map[k].trim())?map[k].trim():"____";});
+  });
+}
+function syncOut(){
+  var r=findRecipe(state.recipeId);
+  var vs=variants();
+  if(vs.length){
+    $("#regen").style.display="";
+    $("#variantsBox").classList.remove("hidden");
+    $("#variantsList").innerHTML=vs.map(function(t,i){
+      return '<div class="vitem'+(!state.dirty&&i===0?' on':'')+'" data-vi="'+i+'"><span class="vnum">'+(i+1)+'</span><span>'+esc(t)+'</span></div>';
+    }).join("");
+    $("#variantsList").querySelectorAll(".vitem").forEach(function(el){
+      el.onclick=function(){
+        var i=parseInt(el.dataset.vi,10);
+        $("#outBox").value=vs[i];state.dirty=true;
+        $("#variantsList").querySelectorAll(".vitem").forEach(function(x){x.classList.remove("on");});
+        el.classList.add("on");
+      };
+    });
+    if(!state.dirty)$("#outBox").value=vs[0];
+  }else{
+    $("#regen").style.display="none";
+    $("#variantsBox").classList.add("hidden");
+    if(!state.dirty)$("#outBox").value=state.free||"";
+  }
+}
+function resetComposer(){
+  state.base={who:"",ask:"",raw:""};state.mind={care:"",fear:"",state:"",result:""};state.slots={};state.free="";state.dirty=false;
+  $("#mindBox").classList.add("hidden");
+  renderCompose();
+}
+/* 对方心思分析 */
+function mindPrompt(){
+  var b=state.base,m=state.mind;
+  return "我要跟一个人沟通，想先搞清楚对方的心思再决定怎么说。请你帮我分析对方的心理，并建议我用哪种说服切口。\n\n"+
+    "【对方是谁 / 关系】"+(b.who||"（未填）")+"\n"+
+    "【我想让TA做】"+(b.ask||"（未填）")+"\n"+
+    (m.care?"【我猜TA在乎】"+m.care+"\n":"")+
+    (m.fear?"【我猜TA担心 / 讨厌】"+m.fear+"\n":"")+
+    (m.state?"【TA现在的状态】"+m.state+"\n":"")+
+    "\n请直接给我，别客套：1) 对方此刻最可能的真实诉求和顾虑；2) 我这个请求在对方眼里的好处和代价；3) 最该用哪一招（投其所好 / 儆其所恶 / 选择的自由 / 被认可欲 / 非你不可 / 团队化 / 感谢），为什么；4) 一句话切入示范。";
+}
+function bindMind(){
+  $("#m_who").oninput=function(){state.base.who=this.value;syncOut();};
+  $("#m_ask").oninput=function(){state.base.ask=this.value;syncOut();};
+  $("#m_care").oninput=function(){state.mind.care=this.value;};
+  $("#m_fear").oninput=function(){state.mind.fear=this.value;};
+  $("#m_state").oninput=function(){state.mind.state=this.value;};
+  $("#mindResultBox").oninput=function(){state.mind.result=this.value;};
+}
+$("#mindBtn").onclick=function(){
+  if(!state.base.who&&!state.base.ask){toast("先填对谁说 / 想让TA做");return;}
+  var p=mindPrompt();$("#mindBox").classList.remove("hidden");$("#mindPromptBox").value=p;copy(p);
+};
+$("#recipeSel").onchange=function(){
+  state.recipeId=this.value;state.slots={};state.free="";state.dirty=false;renderCompose();
+};
+$("#outBox").oninput=function(){
+  state.dirty=true;
+  var r=findRecipe(state.recipeId);
+  if(!hasTpls(r))state.free=this.value;
+  $("#variantsList").querySelectorAll(".vitem").forEach(function(x){x.classList.remove("on");});
+};
+$("#regen").onclick=function(){state.dirty=false;syncOut();};
+$("#copyBtn").onclick=function(){
+  var t=$("#outBox").value;
+  if(!t.trim()){toast("还没有内容");return;}
+  navigator.clipboard&&navigator.clipboard.writeText(t).then(function(){toast("已复制");},function(){fallbackCopy(t);})||fallbackCopy(t);
+};
+function fallbackCopy(t){$("#outBox").select();try{document.execCommand("copy");toast("已复制");}catch(e){toast("复制失败，请手动选");}}
+$("#clearBtn").onclick=function(){resetComposer();};
+$("#saveBtn").onclick=function(){
+  var out=$("#outBox").value.trim();
+  if(!out){toast("最终版还没填");return;}
+  var r=findRecipe(state.recipeId);
+  var log={id:uid(),time:new Date().toISOString(),who:state.base.who,goal:state.base.ask,raw:state.base.raw,
+    recipeId:r.id,recipeName:r.name,cat:r.cat,output:out,effect:""};
+  logs.unshift(log);api("POST","/logs",log);toast("已存进复盘，已清空");
+  resetComposer();
+};
+
+/* ---------- 复盘 ---------- */
+function renderReview(){
+  var byName={};logs.forEach(function(l){byName[l.recipeName]=(byName[l.recipeName]||0)+1;});
+  var month=new Date().toISOString().slice(0,7);
+  var mcount=logs.filter(function(l){return (l.time||"").slice(0,7)===month;}).length;
+  var names=Object.keys(byName);
+  var most=names.length?names.reduce(function(a,b){return byName[a]>=byName[b]?a:b;}):"—";
+  var usedBuiltin={};logs.forEach(function(l){usedBuiltin[l.recipeName]=true;});
+  var unused=BUILTIN.filter(function(r){return !usedBuiltin[r.name];}).map(function(r){return r.name;});
+  var least=unused.length?unused[0]:(names.length?names.reduce(function(a,b){return byName[a]<=byName[b]?a:b;}):"—");
+  $("#statCards").innerHTML=
+    stat("本月套了",mcount+" 次")+
+    stat("最常用",most)+
+    stat(unused.length?"还没用过":"用得最少",least);
+
+  var sorted=names.map(function(n){return [n,byName[n]];}).sort(function(a,b){return b[1]-a[1];});
+  var max=sorted.length?sorted[0][1]:1;
+  $("#usageBars").innerHTML=sorted.length?sorted.map(function(e){
+    var w=Math.round(e[1]/max*100);
+    return '<div class="bar"><span class="bn">'+esc(e[0])+'</span><span class="bt fill" style="width:'+w+'%"></span><span class="bc">'+e[1]+'</span></div>';
+  }).join(""):"";
+
+  if(!logs.length){$("#logList").innerHTML='<div class="empty">还没有记录。去「套一套」生成一句话，点「存进复盘」就会出现在这里，<br>事后回来标上效果（成功/一般/失败），就能看出你最顺手哪一招。</div>';return;}
+  $("#logList").innerHTML=logs.map(function(l){
+    var when=fmtTime(l.time);
+    var before=l.raw?('<span>'+esc(l.raw)+'</span><span class="arr">→</span>'):"";
+    return '<div class="logitem">'+
+      '<div class="top"><span class="who">'+(esc(l.who)||"（未填对象）")+'</span><span class="badge">'+esc(l.recipeName)+'</span></div>'+
+      '<div class="txt">'+before+'<span class="o">'+esc(l.output)+'</span></div>'+
+      '<div class="ft"><span class="time">'+when+(l.goal?' · '+esc(l.goal):'')+'</span>'+
+        '<span><select class="eff" data-id="'+l.id+'" data-v="'+esc(l.effect)+'">'+
+          ['','成功','一般','失败'].map(function(v){return '<option value="'+v+'"'+(l.effect===v?' selected':'')+'>'+(v||'标效果')+'</option>';}).join("")+
+        '</select> <button class="btn sm ghost" data-rm="'+l.id+'">删</button></span>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+  $("#logList").querySelectorAll(".eff").forEach(function(s){s.onchange=function(){
+    logs.forEach(function(l){if(l.id===s.dataset.id)l.effect=s.value;});api("PATCH","/logs/"+s.dataset.id,{effect:s.value});renderReview();
+  };});
+  $("#logList").querySelectorAll("[data-rm]").forEach(function(b){b.onclick=function(){
+    if(confirm("删除这条记录？")){var lrid=b.dataset.rm;logs=logs.filter(function(l){return l.id!==lrid;});api("DELETE","/logs/"+lrid);renderReview();}
+  };});
+}
+function stat(k,v){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+esc(v)+'</div></div>';}
+function fmtTime(iso){try{var d=new Date(iso);return (d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);}catch(e){return "";}}
+
+/* ---------- 导出 / 导入 ---------- */
+$("#exportBtn").onclick=function(){
+  var data=JSON.stringify({recipes:userRecipes,logs:logs,notes:notes,exportedAt:new Date().toISOString()},null,2);
+  var blob=new Blob([data],{type:"application/json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="套一套备份_"+new Date().toISOString().slice(0,10)+".json";a.click();
+  toast("已导出");
+};
+$("#importBtn").onclick=function(){$("#importFile").click();};
+$("#importFile").onchange=function(){
+  var f=this.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var d=JSON.parse(rd.result);
+      if(!confirm("导入会替换当前的自定义配方、复盘记录和理解/诊断，继续？"))return;
+      var impN=d.notes;
+      if(impN&&!Array.isArray(impN)){var arr=[];for(var k in impN){arr.push({id:k,u:(impN[k]||{}).u||"",d:(impN[k]||{}).d||""});}impN=arr;}
+      api("POST","/import",{recipes:d.recipes||[],logs:d.logs||[],notes:impN||[]}).then(function(){return loadAll();}).then(function(){renderLib();renderReview();toast("已导入");});
+    }catch(e){toast("文件格式不对");}
+  };
+  rd.readAsText(f);this.value="";
+};
+
+/* ---------- init ---------- */
+bindMind();
+loadAll().then(function(){renderLib();},function(){renderLib();});
+</script>
+</body>
+</html>
