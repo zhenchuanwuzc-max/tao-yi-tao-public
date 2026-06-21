@@ -46,11 +46,23 @@ button.btn.sm{font-size:12px;padding:4px 10px}
 .card .name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
 .card .tag{font-size:11px;color:var(--hint);border:.5px solid var(--line);border-radius:20px;padding:1px 8px;font-weight:400}
 .card .heart{font-size:13px;color:var(--muted);margin-top:5px}
-.card .when{font-size:12px;color:var(--accent-text);background:var(--accent-bg);display:inline-block;padding:2px 8px;border-radius:6px;margin-top:8px}
+.card .when{font-size:12px;color:var(--muted);background:var(--surface2);display:inline-block;padding:2px 8px;border-radius:6px;margin-top:8px}
 .ex{font-size:12.5px;color:var(--text);margin-top:9px;padding-top:9px;border-top:.5px solid var(--line)}
 .ex .row{margin:3px 0;color:var(--muted)}
 .ex .row b{color:var(--text);font-weight:500}
 .ex .arr{color:var(--accent);margin:0 4px}
+.cases{margin-top:10px;padding-top:9px;border-top:.5px solid var(--line)}
+.cases-head{font-size:12px;color:var(--muted);font-weight:500;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px}
+.cases-head .ct{color:var(--hint);font-weight:400}
+.cases-list{display:flex;flex-direction:column;gap:5px}
+.crow{font-size:12.5px;color:var(--text);line-height:1.5;display:flex;gap:6px;align-items:flex-start}
+.crow .cb{flex:none;font-size:10px;color:var(--hint);border:.5px solid var(--line);border-radius:20px;padding:0 6px;margin-top:3px}
+.crow .orig{color:var(--muted)}
+.crow .arr{color:var(--accent);margin:0 3px}
+.crow .cx{cursor:pointer;color:var(--hint);flex:none;margin-left:auto;padding:0 4px}
+.crow .cx:hover{color:var(--bad)}
+.addcase{display:flex;gap:6px;margin-top:8px}
+.addcase input{font-size:12.5px;padding:6px 9px}
 .card .ops{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
 .mynote{margin-top:11px;padding-top:10px;border-top:.5px solid var(--line)}
 .mynote:empty{display:none}
@@ -64,7 +76,7 @@ button.btn.sm{font-size:12px;padding:4px 10px}
 .na.pr{min-height:96px;background:var(--surface2);color:var(--muted);font-size:12px}
 .np-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 .diagbox{margin-top:10px}
-.np-hint{font-size:12px;background:var(--accent-bg);color:var(--accent-text);padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:8px}
+.np-hint{font-size:12px;background:var(--surface2);color:var(--muted);padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:8px}
 .tip-mine{color:var(--accent-text)}
 .mindbox{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:14px 15px;margin-bottom:14px}
 .mind-head{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -88,7 +100,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
 .ftbl .tr{display:grid;grid-template-columns:104px 1fr;border-bottom:.5px solid var(--line)}
 .ftbl .tr:last-child{border-bottom:0}
 .ftbl .th{padding:10px 12px;background:var(--surface2);color:var(--muted);font-size:13px;display:flex;align-items:center}
-.ftbl .th.slot{background:var(--accent-bg);color:var(--accent-text)}
+.ftbl .th.slot{background:var(--surface2);color:var(--muted)}
 .ftbl .td{padding:7px 10px;display:flex;align-items:center}
 .ftbl .td input,.ftbl .td select{border:0;background:transparent;padding:4px 2px}
 .ftbl .td input:focus,.ftbl .td select:focus{box-shadow:none}
@@ -268,7 +280,7 @@ var BUILTIN = [
 ];
 
 /* ---------- 存储（server 后端 + git 多机同步；notes 为数组）---------- */
-var userRecipes=[], logs=[], notes=[];   /* notes: [{id,u,u_at,d,d_at}] */
+var userRecipes=[], logs=[], notes=[], cases=[];   /* notes:[{id,u,u_at,d,d_at}]; cases:[{id,recipeId,text}] */
 function api(method,path,body){
   return fetch(path,{method:method,headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined})
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
@@ -279,6 +291,7 @@ function loadAll(){
     userRecipes=(d.recipes||[]).filter(function(x){return x.id&&x.id.indexOf("b_")!==0;});
     logs=(d.logs||[]).sort(function(a,b){return (b.time||"").localeCompare(a.time||"");});
     notes=d.notes||[];
+    cases=d.cases||[];
   });
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
@@ -327,6 +340,23 @@ function summaryHtml(id){
   if(n.d)h+='<div class="mn-label" style="margin-top:7px">Claude 诊断</div><div class="mn-text diag">'+esc(n.d)+'</div>';
   return h;
 }
+function caseRow(text,badge,delId){
+  var t=String(text||"");var inner;var m=t.split(/→|=>/);
+  if(m.length>1&&(m[1]||"").trim())inner='<span class="orig">'+esc((m[0]||"").trim())+'</span><span class="arr">→</span>'+esc(m[1].trim());
+  else inner=esc(t.replace(/→|=>/g,"").trim());
+  return '<div class="crow">'+(badge?'<span class="cb">'+badge+'</span>':'')+'<span>'+inner+'</span>'+(delId?'<span class="cx" data-delcase="'+delId+'" title="删除">×</span>':'')+'</div>';
+}
+function casesHtml(r){
+  var seed=(r.ex||[]).map(function(e){return caseRow(e[1]?(e[0]+" → "+e[1]):e[0],"",null);});
+  var mine=cases.filter(function(c){return c.recipeId===r.id;}).map(function(c){return caseRow(c.text,"",c.id);});
+  var hist=logs.filter(function(l){return l.recipeId===r.id;}).slice(0,6).map(function(l){return caseRow(l.raw?(l.raw+" → "+l.output):l.output,"复盘",null);});
+  var all=seed.concat(mine).concat(hist);
+  return '<div class="cases">'+
+    '<div class="cases-head"><span>案例库 <span class="ct">('+all.length+')</span></span><button class="btn sm ghost" data-addcase="'+r.id+'">+ 添加案例</button></div>'+
+    (all.length?'<div class="cases-list">'+all.join("")+'</div>':'<div class="ct" style="font-size:12px">还没有案例。点「+ 添加案例」录入，或在套一套里用它、存进复盘会自动出现在这。</div>')+
+    '<div class="addcase hidden" id="ac_'+r.id+'"><input id="aci_'+r.id+'" placeholder="加一条案例（原话 → 改写，或直接一句）"><button class="btn sm pri" data-savecase="'+r.id+'">存</button></div>'+
+  '</div>';
+}
 
 /* ---------- 配方库 ---------- */
 var curCat="切口", editId=null;
@@ -345,15 +375,12 @@ function renderLib(){
   }
   g.innerHTML=list.map(function(r){
     var builtin=r.id.indexOf("b_")===0;
-    var exHtml=(r.ex||[]).slice(0,3).map(function(e){
-      return '<div class="row"><b>'+esc(e[0])+'</b><span class="arr">→</span>'+esc(e[1])+'</div>';
-    }).join("");
     var n=noteOf(r.id);
     return '<div class="card">'+
       '<div class="name">'+esc(r.name)+(builtin?'<span class="tag">内置</span>':'')+'</div>'+
       (r.heart?'<div class="heart">'+esc(r.heart)+'</div>':'')+
       (r.when?'<div class="when">'+esc(r.when)+'</div>':'')+
-      (exHtml?'<div class="ex">'+exHtml+'</div>':'')+
+      casesHtml(r)+
       '<div class="mynote" id="sum_'+r.id+'">'+summaryHtml(r.id)+'</div>'+
       '<div class="ops">'+
         '<button class="btn sm" data-use="'+r.id+'">用这个套一套</button>'+
@@ -394,6 +421,14 @@ function renderLib(){
   };});
   g.querySelectorAll("[data-saved]").forEach(function(b){b.onclick=function(){
     var id=b.dataset.saved;var dv=$("#nd_"+id).value.trim();setNoteLocal(id,{d:dv});api("PUT","/notes/"+id,{d:dv});$("#sum_"+id).innerHTML=summaryHtml(id);toast("已存诊断");
+  };});
+  g.querySelectorAll("[data-addcase]").forEach(function(b){b.onclick=function(){var p=$("#ac_"+b.dataset.addcase);p.classList.toggle("hidden");if(!p.classList.contains("hidden"))$("#aci_"+b.dataset.addcase).focus();};});
+  g.querySelectorAll("[data-savecase]").forEach(function(b){b.onclick=function(){
+    var rid=b.dataset.savecase;var t=$("#aci_"+rid).value.trim();if(!t){toast("空的");return;}
+    var c={id:uid(),recipeId:rid,text:t};cases.push(c);api("POST","/cases",c);renderLib();toast("已加进案例库");
+  };});
+  g.querySelectorAll("[data-delcase]").forEach(function(b){b.onclick=function(){
+    var cid=b.dataset.delcase;cases=cases.filter(function(c){return c.id!==cid;});api("DELETE","/cases/"+cid);renderLib();
   };});
 }
 function toggleNote(id){
@@ -484,6 +519,7 @@ function renderCompose(){
   renderRecipeSel();
   syncMindInputs();
   var r=findRecipe(state.recipeId);if(!r)return;
+  $("#compose .mindbox").classList.toggle("hidden", r.cat==="警句技巧");
   var rows="";
   rows+=trRow("我的原话","raw",state.base.raw,"你直觉会怎么说（选填）",false);
   if(hasTpls(r)){
@@ -645,7 +681,7 @@ function fmtTime(iso){try{var d=new Date(iso);return (d.getMonth()+1)+"/"+d.getD
 
 /* ---------- 导出 / 导入 ---------- */
 $("#exportBtn").onclick=function(){
-  var data=JSON.stringify({recipes:userRecipes,logs:logs,notes:notes,exportedAt:new Date().toISOString()},null,2);
+  var data=JSON.stringify({recipes:userRecipes,logs:logs,notes:notes,cases:cases,exportedAt:new Date().toISOString()},null,2);
   var blob=new Blob([data],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="套一套备份_"+new Date().toISOString().slice(0,10)+".json";a.click();
@@ -661,7 +697,7 @@ $("#importFile").onchange=function(){
       if(!confirm("导入会替换当前的自定义配方、复盘记录和理解/诊断，继续？"))return;
       var impN=d.notes;
       if(impN&&!Array.isArray(impN)){var arr=[];for(var k in impN){arr.push({id:k,u:(impN[k]||{}).u||"",d:(impN[k]||{}).d||""});}impN=arr;}
-      api("POST","/import",{recipes:d.recipes||[],logs:d.logs||[],notes:impN||[]}).then(function(){return loadAll();}).then(function(){renderLib();renderReview();toast("已导入");});
+      api("POST","/import",{recipes:d.recipes||[],logs:d.logs||[],notes:impN||[],cases:d.cases||[]}).then(function(){return loadAll();}).then(function(){renderLib();renderReview();toast("已导入");});
     }catch(e){toast("文件格式不对");}
   };
   rd.readAsText(f);this.value="";

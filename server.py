@@ -52,7 +52,7 @@ if not DATA_DIR:
 DATA_DIR = os.path.expanduser(DATA_DIR)
 DATA_FILE = os.path.join(DATA_DIR, "data.json")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-COLLECTIONS = ("recipes", "logs", "notes")
+COLLECTIONS = ("recipes", "logs", "notes", "cases")
 
 INDEX_HTML = "<h1>index.html not loaded</h1>"
 
@@ -179,6 +179,7 @@ def delete_item(coll, i):
         deleted = len(d[coll]) < before
         if coll == "recipes":
             d["notes"] = [x for x in d["notes"] if x.get("id") != i]
+            d["cases"] = [x for x in d["cases"] if x.get("recipeId") != i]
         if deleted:
             _atomic_write(d)
     if deleted:
@@ -218,7 +219,7 @@ def delete_note(rid):
     return deleted
 
 
-def replace_all(recipes, logs, notes):
+def replace_all(recipes, logs, notes, cases=None):
     ts = now_iso()
 
     def stamp(x):
@@ -243,6 +244,7 @@ def replace_all(recipes, logs, notes):
         d["recipes"] = [stamp(x) for x in (recipes or [])]
         d["logs"] = [stamp(x) for x in (logs or [])]
         d["notes"] = nn
+        d["cases"] = [stamp(x) for x in (cases or [])]
         _atomic_write(d)
     schedule_sync()
     return read_data()
@@ -293,8 +295,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, add_item("recipes", b))
         elif path == "/logs":
             self._send(200, add_item("logs", b))
+        elif path == "/cases":
+            self._send(200, add_item("cases", b))
         elif path == "/import":
-            self._send(200, replace_all(b.get("recipes"), b.get("logs"), b.get("notes")))
+            self._send(200, replace_all(b.get("recipes"), b.get("logs"), b.get("notes"), b.get("cases")))
         else:
             self._send(404, {"error": "not found"})
 
@@ -317,7 +321,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         parts = urlparse(self.path).path.strip("/").split("/")
-        if len(parts) == 2 and parts[0] in ("recipes", "logs"):
+        if len(parts) == 2 and parts[0] in ("recipes", "logs", "cases"):
             self._send(200, {"deleted": delete_item(parts[0], parts[1])})
         elif len(parts) == 2 and parts[0] == "notes":
             self._send(200, {"deleted": delete_note(parts[1])})
