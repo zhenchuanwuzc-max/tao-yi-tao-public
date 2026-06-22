@@ -33,3 +33,8 @@ bash ~/tao-yi-tao/install.sh                # 配 launchd 自启 + 打原生 .ap
 - 标准库 http.server，无 Flask、无 venv、无第三方依赖。
 - Dock App = `tao-shell.swift`（macOS 自带 swift + WKWebView 编译的原生壳，零第三方依赖），只负责开窗口连本机 server；server 生命周期归 launchd。无 swiftc 的机器装机时自动回退到 osacompile 浏览器壳。
 - AI 诊断 / 分析走"生成提示词 → 复制 → 贴进你的 AI"，不内嵌任何 API key（代码可公开分享）。
+
+## 更新记录
+
+- **0.2.0** — Dock App 从「osacompile 甩浏览器开标签」改成 Swift+WKWebView 原生独立窗口（独立 Dock 图标 + Cmd+Tab 单独切 + 跟浏览器隔离，零依赖；无 swiftc 自动回退浏览器壳）；加主菜单快捷键 Cmd+R 刷新 / Cmd+W 关窗 / Cmd+Q 退出；修复切 tab 时居中列因滚动条宽度差左右跳动。
+- **0.1.0** — 首版：标准库 server + 公开代码仓/私有数据仓双仓 + 多机 git 逐条 union 合并；配方库（切口 7 个内置 + 警句技巧）/ 套一套填空 / 复盘统计三界面。
