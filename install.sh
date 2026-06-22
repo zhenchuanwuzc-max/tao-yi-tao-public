@@ -59,24 +59,74 @@ launchctl unload "$PLIST" 2>/dev/null || true
 launchctl load "$PLIST"
 echo "✅ launchd 已加载（$LABEL，自启 + 崩溃自愈）"
 
-# 4. Dock .app（极简：打开 localhost）+ 套自定义图标
-rm -rf "$APP"
-if osacompile -o "$APP" -e "open location \"http://localhost:$PORT\"" 2>/dev/null; then
-    # osacompile 打出来默认是灰色 applet 图标；用仓里的 icon.icns 覆盖（cosmetic，失败不阻断安装）
-    ICNS="$SCRIPT_DIR/icon.icns"
-    if [ -f "$ICNS" ]; then
-        cp "$ICNS" "$APP/Contents/Resources/applet.icns" 2>/dev/null || true
-        # 删掉 asset-catalog 图标源，让 applet.icns 成唯一图标源（否则 Dock 仍认 Assets.car 默认图标）
-        /usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$APP/Contents/Info.plist" 2>/dev/null || true
-        rm -f "$APP/Contents/Resources/Assets.car" 2>/dev/null || true
-        codesign --force -s - "$APP" >/dev/null 2>&1 || true   # 包已改，重签名
-        /usr/bin/touch "$APP" 2>/dev/null || true
-        LSREG="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
-        "$LSREG" -f "$APP" 2>/dev/null || true
+# 4. Dock .app — 优先打「原生独立窗口」(Swift+WKWebView 壳)，无 swiftc/编译失败则回退浏览器壳(osacompile)。
+#    幂等关键：全程在临时目录构建，整套成功后才 mv 替换旧 $APP；任一步失败就保留旧 app 不动，绝不"先删后建"。
+LSREG="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+
+# 4a. 构建原生壳到指定目录 $1；任一步失败 return 1（不碰旧 app）。localhost http 默认豁免 ATS，无需 Info.plist 例外。
+build_swift_app() {
+    # ⚠️ 必须分行：bash 同一 local 行声明多个变量时，右值在赋值前统一展开，
+    #    `local dst=.. bin="$dst/.."` 里 bin 会拿到空的 $dst → 路径变成 /Contents/MacOS/...。
+    local dst="$1"
+    local bin="$dst/Contents/MacOS/套一套"
+    command -v swiftc >/dev/null 2>&1 || return 1
+    mkdir -p "$dst/Contents/MacOS" "$dst/Contents/Resources" || return 1
+    swiftc "$SCRIPT_DIR/tao-shell.swift" -o "$bin" 2>/dev/null || return 1   # 编译失败=换 fallback
+    [ -x "$bin" ] || return 1
+    [ -f "$SCRIPT_DIR/icon.icns" ] && cp "$SCRIPT_DIR/icon.icns" "$dst/Contents/Resources/套一套.icns" || true
+    cat > "$dst/Contents/Info.plist" <<PLIST || return 1
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleName</key><string>套一套</string>
+  <key>CFBundleDisplayName</key><string>套一套</string>
+  <key>CFBundleExecutable</key><string>套一套</string>
+  <key>CFBundleIdentifier</key><string>com.ocean.tao.shell</string>
+  <key>CFBundleIconFile</key><string>套一套</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>LSMinimumSystemVersion</key><string>11.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>TAO_PORT</key><string>$PORT</string>
+</dict></plist>
+PLIST
+    codesign --force -s - "$dst" >/dev/null 2>&1 || true   # ad-hoc 本机自签；本地编译无 quarantine，Gatekeeper 不拦
+    return 0
+}
+
+# 4b. fallback：osacompile 浏览器壳（双击调默认浏览器开 localhost）。同样构建到 $1。
+build_osacompile_app() {
+    local dst="$1"
+    osacompile -o "$dst" -e "open location \"http://localhost:$PORT\"" 2>/dev/null || return 1
+    if [ -f "$SCRIPT_DIR/icon.icns" ]; then
+        cp "$SCRIPT_DIR/icon.icns" "$dst/Contents/Resources/applet.icns" 2>/dev/null || true
+        /usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$dst/Contents/Info.plist" 2>/dev/null || true
+        rm -f "$dst/Contents/Resources/Assets.car" 2>/dev/null || true
+        codesign --force -s - "$dst" >/dev/null 2>&1 || true
     fi
-    echo "✅ 已打包 $APP（拖进 Dock 即可）"
+    return 0
+}
+
+TMP_APP="$(mktemp -d)/套一套.app"
+APP_KIND=""
+if build_swift_app "$TMP_APP"; then
+    APP_KIND="原生独立窗口"
 else
-    echo "⚠️ .app 打包失败，可直接用浏览器开 http://localhost:$PORT"
+    rm -rf "$TMP_APP" 2>/dev/null || true
+    if build_osacompile_app "$TMP_APP"; then
+        APP_KIND="浏览器壳(无 swiftc 回退)"
+    fi
+fi
+
+if [ -n "$APP_KIND" ] && [ -d "$TMP_APP" ]; then
+    rm -rf "$APP" 2>/dev/null || true        # 此刻新 app 已在临时目录就绪，才删旧的
+    mkdir -p "$(dirname "$APP")"
+    mv "$TMP_APP" "$APP"
+    /usr/bin/touch "$APP" 2>/dev/null || true
+    "$LSREG" -f "$APP" 2>/dev/null || true
+    echo "✅ 已打包 $APP（$APP_KIND，拖进 Dock 即可）"
+else
+    echo "⚠️ .app 打包失败（旧 app 已保留不动），可直接用浏览器开 http://localhost:$PORT"
 fi
 
 echo ""
