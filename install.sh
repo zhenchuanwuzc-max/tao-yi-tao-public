@@ -59,9 +59,21 @@ launchctl unload "$PLIST" 2>/dev/null || true
 launchctl load "$PLIST"
 echo "✅ launchd 已加载（$LABEL，自启 + 崩溃自愈）"
 
-# 4. Dock .app（极简：打开 localhost）
+# 4. Dock .app（极简：打开 localhost）+ 套自定义图标
 rm -rf "$APP"
 if osacompile -o "$APP" -e "open location \"http://localhost:$PORT\"" 2>/dev/null; then
+    # osacompile 打出来默认是灰色 applet 图标；用仓里的 icon.icns 覆盖（cosmetic，失败不阻断安装）
+    ICNS="$SCRIPT_DIR/icon.icns"
+    if [ -f "$ICNS" ]; then
+        cp "$ICNS" "$APP/Contents/Resources/applet.icns" 2>/dev/null || true
+        # 删掉 asset-catalog 图标源，让 applet.icns 成唯一图标源（否则 Dock 仍认 Assets.car 默认图标）
+        /usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$APP/Contents/Info.plist" 2>/dev/null || true
+        rm -f "$APP/Contents/Resources/Assets.car" 2>/dev/null || true
+        codesign --force -s - "$APP" >/dev/null 2>&1 || true   # 包已改，重签名
+        /usr/bin/touch "$APP" 2>/dev/null || true
+        LSREG="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+        "$LSREG" -f "$APP" 2>/dev/null || true
+    fi
     echo "✅ 已打包 $APP（拖进 Dock 即可）"
 else
     echo "⚠️ .app 打包失败，可直接用浏览器开 http://localhost:$PORT"
