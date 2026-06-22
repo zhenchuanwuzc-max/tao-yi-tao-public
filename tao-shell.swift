@@ -31,8 +31,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        buildMenu()
         load()
     }
+
+    // 原生 app 要有主菜单，键盘快捷键(Cmd+R/W/Q)才生效。
+    func buildMenu() {
+        let mainMenu = NSMenu()
+        let appItem = NSMenuItem()
+        mainMenu.addItem(appItem)
+        let appMenu = NSMenu()
+        appItem.submenu = appMenu
+        appMenu.addItem(withTitle: "刷新", action: #selector(reload), keyEquivalent: "r")
+        appMenu.addItem(withTitle: "关闭窗口", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: "退出套一套", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        NSApp.mainMenu = mainMenu
+    }
+
+    @objc func reload() { retries = 0; load() }   // 重新拉服务器(不是 webView.reload,避免卡在兜底页)
 
     func load() {
         webView.load(URLRequest(url: URL(string: URL_STR)!))
