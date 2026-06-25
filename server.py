@@ -52,7 +52,7 @@ if not DATA_DIR:
 DATA_DIR = os.path.expanduser(DATA_DIR)
 DATA_FILE = os.path.join(DATA_DIR, "data.json")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-COLLECTIONS = ("recipes", "logs", "notes", "cases")
+COLLECTIONS = ("recipes", "logs", "notes", "cases", "frameworks")
 
 INDEX_HTML = "<h1>index.html not loaded</h1>"
 
@@ -297,6 +297,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, add_item("logs", b))
         elif path == "/cases":
             self._send(200, add_item("cases", b))
+        elif path == "/frameworks":
+            self._send(200, add_item("frameworks", b))
         elif path == "/import":
             self._send(200, replace_all(b.get("recipes"), b.get("logs"), b.get("notes"), b.get("cases")))
         else:
@@ -305,7 +307,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_PATCH(self):
         parts = urlparse(self.path).path.strip("/").split("/")
         b = self._read_body()
-        if len(parts) == 2 and parts[0] in ("recipes", "logs"):
+        if len(parts) == 2 and parts[0] in ("recipes", "logs", "frameworks"):
             t = patch_item(parts[0], parts[1], b)
             self._send(200 if t else 404, t or {"error": "not found"})
         else:
@@ -321,7 +323,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         parts = urlparse(self.path).path.strip("/").split("/")
-        if len(parts) == 2 and parts[0] in ("recipes", "logs", "cases"):
+        if len(parts) == 2 and parts[0] in ("recipes", "logs", "cases", "frameworks"):
             self._send(200, {"deleted": delete_item(parts[0], parts[1])})
         elif len(parts) == 2 and parts[0] == "notes":
             self._send(200, {"deleted": delete_note(parts[1])})

@@ -138,6 +138,31 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
 .hidden{display:none}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:13px;padding:9px 18px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
 .toast.show{opacity:.95}
+/* 框架 */
+.grid.fwmode{display:block}   /* 框架视图脱离话术卡片网格，用全宽单栏 */
+.fwcard{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:18px 22px;margin-bottom:14px}
+.fwcard .field input,.fwcard .na{max-width:none}
+.fwq .na{min-height:54px}
+.fwcard .fwname{font-size:16px;font-weight:600}
+.fwcard .fwdesc{font-size:13px;color:var(--muted);margin-top:3px}
+.fwsnaps{margin-top:14px}
+.fwsnaps .sh{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:8px}
+.snap{background:var(--surface);border:.5px solid var(--line);border-radius:var(--radius);padding:12px 15px;margin-bottom:10px}
+.snap .st{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.snap .sname{font-size:14px;font-weight:600}
+.snap .sv{font-size:11px;padding:2px 9px;border-radius:20px;border:.5px solid var(--line2);color:var(--muted)}
+.snap .sv[data-v="重仓"]{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.snap .sv[data-v="观望"]{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.snap .sv[data-v="撤损"]{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+.snap .sreason{font-size:12.5px;color:var(--muted);margin-top:6px;white-space:pre-wrap}
+.snap .sops{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.fwlayer{margin-bottom:14px}
+.fwlayer .ll{font-size:13px;font-weight:600;color:var(--accent-text);margin-bottom:8px}
+.fwq{margin-bottom:11px}
+.fwq .qq{font-size:13px;color:var(--text);margin-bottom:4px}
+.fwq .qh{font-size:11.5px;color:var(--hint);margin-bottom:5px}
+.fwq.focus{border-left:2.5px solid var(--accent);padding-left:11px}
+.fwq.focus .qq{color:var(--accent-text);font-weight:600}
 @media (max-width:560px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -161,10 +186,12 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
       <div class="seg" id="catSeg">
         <button data-cat="切口" class="on">切口</button>
         <button data-cat="警句技巧">警句技巧</button>
+        <button data-cat="框架">框架</button>
       </div>
       <div class="spacer"></div>
       <button class="btn" id="batchDiagBtn">全部理解 → Claude 诊断</button>
       <button class="btn" id="addBtn">+ 添加配方</button>
+      <button class="btn pri hidden" id="newFwBtn">+ 新建战场判断</button>
     </div>
 
     <div class="form hidden" id="recipeForm">
@@ -280,8 +307,27 @@ var BUILTIN = [
    tpls:["{who}，麻烦{ask}，谢谢你～","{who}，{ask}就拜托了，真的谢谢！","辛苦{who}，帮我{ask}，感激不尽～"]}
 ];
 
+/* ---------- 内置「框架」（判断框架，九问固定，不进 data.json）---------- */
+var FW_VERSION=1;   /* 改九问措辞/增减必 +1；快照存版本便于解释旧数据 */
+var BUILTIN_FW=[{
+  id:"fw_industry", name:"行业分析（天时·地利·人和）", desc:"进任何新战场前，判断该不该 all in",
+  layers:[
+    {key:"tianshi", label:"天时 · 行业大势（不可控）", questions:[
+      {k:"q1", q:"我所在的行业/赛道，整体在上升还是衰退？", hint:"经济周期/行业增速/政策/技术拐点——换公司都带不走的大势"}]},
+    {key:"dili", label:"地利 · 组织内选坑（半可控）", questions:[
+      {k:"q2", q:"我蹲的这个业务域，在组织内部是不是好坑？", hint:"有没有预算/人头/高层关注/增长任务——可换域改变"}]},
+    {key:"renhe", label:"人和 · 我的杠杆（可控）", questions:[
+      {k:"q3", q:"前置开关：这个场子认不认我准备产出的这种贡献（货币）？", hint:"先确认场子认这种货币；不认就别投。对你多数场子是绿灯，真卡点往往在下面"},
+      {k:"q4", q:"撬动：我能不能撬动一群人一起做？", hint:"拉一群人一起干——这一格你历来做得到，别在这停"},
+      {k:"q5", focus:true, q:"复制：我有没有给团队「自己能建」的能力输入，而不只是派活？", hint:"🔴 你真正栽的那格：商品侧你带了团队、也派了活，但没给「怎么建 SOP」的能力输入——团队是你的手，不是能独立建的分身。别又因为「自己干更快」跳过这一步。"},
+      {k:"q6", q:"归属：复制出去之后，结果和标准归不归我？", hint:"依赖复制——东西被拆走时有没有占住 owner"}]}
+  ]
+}];
+function findFw(id){return BUILTIN_FW.filter(function(f){return f.id===id;})[0];}
+function fwQuestions(fw){var qs=[];(fw.layers||[]).forEach(function(L){(L.questions||[]).forEach(function(q){qs.push(q);});});return qs;}
+
 /* ---------- 存储（server 后端 + git 多机同步；notes 为数组）---------- */
-var userRecipes=[], logs=[], notes=[], cases=[];   /* notes:[{id,u,u_at,d,d_at}]; cases:[{id,recipeId,text}] */
+var userRecipes=[], logs=[], notes=[], cases=[], frameworks=[];   /* notes:[{id,u,u_at,d,d_at}]; cases:[{id,recipeId,text}]; frameworks:[{id,fwId,fwVersion,title,answers,verdict,reason}] */
 function api(method,path,body){
   return fetch(path,{method:method,headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined})
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
@@ -293,6 +339,7 @@ function loadAll(){
     logs=(d.logs||[]).sort(function(a,b){return (b.time||"").localeCompare(a.time||"");});
     notes=d.notes||[];
     cases=d.cases||[];
+    frameworks=d.frameworks||[];
   });
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
@@ -364,12 +411,22 @@ var curCat="切口", editId=null;
 document.querySelectorAll("#catSeg button").forEach(function(b){
   b.onclick=function(){
     document.querySelectorAll("#catSeg button").forEach(function(x){x.classList.remove("on");});
-    b.classList.add("on");curCat=b.dataset.cat;renderLib();
+    b.classList.add("on");curCat=b.dataset.cat;fwEditId=null;syncCatButtons();renderLib();
   };
 });
+/* 框架 tab 隐藏话术按钮、显「+新建战场判断」；话术 tab 反之 */
+function syncCatButtons(){
+  var fw=curCat==="框架";
+  $("#batchDiagBtn").classList.toggle("hidden",fw);
+  $("#addBtn").classList.toggle("hidden",fw);
+  $("#newFwBtn").classList.toggle("hidden",!fw);
+  $("#recipeForm").classList.add("hidden");
+}
 function renderLib(){
+  if(curCat==="框架"){renderFrameworks();return;}   /* 框架走独立路径，话术逻辑零改动 */
   var list=allRecipes().filter(function(r){return r.cat===curCat;});
   var g=$("#libGrid");
+  g.classList.remove("fwmode");
   if(!list.length){
     g.innerHTML='<div class="empty">「'+curCat+'」还没有内容。<br>点右上「+ 添加配方」自己录入，<br>或把整理好的文案发给 Claude 写进默认值（这样两台 Mac + 手机都同步）。</div>';
     return;
@@ -432,6 +489,117 @@ function renderLib(){
     var cid=b.dataset.delcase;cases=cases.filter(function(c){return c.id!==cid;});api("DELETE","/cases/"+cid);renderLib();
   };});
 }
+/* ---------- 框架（行业分析判断工具）---------- */
+var fwEditId=null;   /* 正在填写的快照 id；null=未在填写页 */
+function snapsOf(fwId){return frameworks.filter(function(s){return s.fwId===fwId;}).sort(function(a,b){return (b.updated_at||"").localeCompare(a.updated_at||"");});}
+function renderFrameworks(){
+  var g=$("#libGrid");
+  g.classList.add("fwmode");
+  if(fwEditId!==null){renderFwEditor();return;}
+  var html=BUILTIN_FW.map(function(fw){
+    var snaps=snapsOf(fw.id);
+    var snapHtml=snaps.length?snaps.map(function(s){
+      return '<div class="snap">'+
+        '<div class="st"><span class="sname">'+esc(s.title||"（未命名战场）")+'</span>'+
+          (s.verdict?'<span class="sv" data-v="'+esc(s.verdict)+'">'+esc(s.verdict)+'</span>':'<span class="sv">未判断</span>')+'</div>'+
+        (s.reason?'<div class="sreason">'+esc(s.reason)+'</div>':'')+
+        '<div class="sops">'+
+          '<button class="btn sm" data-fwopen="'+s.id+'">打开 / 编辑</button>'+
+          '<button class="btn sm ghost" data-fwdel="'+s.id+'">删除</button>'+
+        '</div>'+
+      '</div>';
+    }).join(""):'<div class="ct" style="font-size:12px;color:var(--hint)">还没有战场判断。点上方「+ 新建战场判断」，对着天时/地利/人和九问逐条填，填完让 Claude 给"重仓/观望/撤损"的判断。</div>';
+    return '<div class="fwcard">'+
+      '<div class="fwname">'+esc(fw.name)+'</div>'+
+      '<div class="fwdesc">'+esc(fw.desc)+'</div>'+
+      '<div class="fwsnaps"><div class="sh">我的战场判断 ('+snaps.length+')</div>'+snapHtml+'</div>'+
+    '</div>';
+  }).join("");
+  g.innerHTML=html;
+  g.querySelectorAll("[data-fwopen]").forEach(function(b){b.onclick=function(){fwEditId=b.dataset.fwopen;renderFrameworks();};});
+  g.querySelectorAll("[data-fwdel]").forEach(function(b){b.onclick=function(){
+    if(confirm("删除这个战场判断？")){var id=b.dataset.fwdel;frameworks=frameworks.filter(function(s){return s.id!==id;});api("DELETE","/frameworks/"+id);renderFrameworks();}
+  };});
+}
+function renderFwEditor(){
+  var snap=frameworks.filter(function(s){return s.id===fwEditId;})[0];
+  var isNew=!snap;
+  var fw=findFw(isNew?"fw_industry":snap.fwId);
+  var ans=(snap&&snap.answers)||{};
+  var g=$("#libGrid");
+  var layers=fw.layers.map(function(L){
+    var qs=L.questions.map(function(q){
+      return '<div class="fwq'+(q.focus?' focus':'')+'">'+
+        '<div class="qq">'+esc(q.q)+'</div>'+
+        '<div class="qh">'+esc(q.hint)+'</div>'+
+        '<textarea class="na" data-fwq="'+q.k+'" placeholder="填这个战场的实况…">'+esc(ans[q.k]||"")+'</textarea>'+
+      '</div>';
+    }).join("");
+    return '<div class="fwlayer"><div class="ll">'+esc(L.label)+'</div>'+qs+'</div>';
+  }).join("");
+  g.innerHTML='<div class="fwcard">'+
+    '<div class="field"><label>战场名（例：金物流 2026-06 / 商品侧复盘）</label>'+
+      '<input id="fwTitle" placeholder="给这次判断起个名" value="'+esc((snap&&snap.title)||"")+'"></div>'+
+    layers+
+    '<div class="actions">'+
+      '<button class="btn ghost" id="fwBack">← 返回列表</button>'+
+      '<button class="btn" id="fwSave">保存</button>'+
+      '<button class="btn pri" id="fwGen">让 Claude 判断（重仓/观望/撤损）</button>'+
+    '</div>'+
+    '<div class="diagbox hidden" id="fwDiag">'+
+      '<div class="np-hint">判断提示词已复制 → 贴进 Claude（这里 / claude.ai / Claude Code）。复制失败手选下面这段：</div>'+
+      '<textarea id="fwPromptBox" class="na pr" readonly></textarea>'+
+      '<label class="np-l">把 Claude 的判断贴回来存档</label>'+
+      '<div class="field" style="margin-top:6px"><label>结论（重仓 / 观望 / 撤损）</label>'+
+        '<select id="fwVerdict"><option value="">未判断</option><option'+(snap&&snap.verdict==="重仓"?" selected":"")+'>重仓</option><option'+(snap&&snap.verdict==="观望"?" selected":"")+'>观望</option><option'+(snap&&snap.verdict==="撤损"?" selected":"")+'>撤损</option></select></div>'+
+      '<div class="field"><label>一句话理由摘要（防三个月后断片）</label>'+
+        '<textarea id="fwReason" class="na" placeholder="Claude 结论的核心理由…">'+esc((snap&&snap.reason)||"")+'</textarea></div>'+
+      '<div class="np-actions"><button class="btn sm pri" id="fwSaveVerdict">存判断</button></div>'+
+    '</div>'+
+  '</div>';
+  $("#fwBack").onclick=function(){fwEditId=null;renderFrameworks();};
+  function collect(){
+    var a={};fwQuestions(fw).forEach(function(q){var el=g.querySelector('[data-fwq="'+q.k+'"]');a[q.k]=el?el.value.trim():"";});
+    return {title:($("#fwTitle").value||"").trim(),answers:a};
+  }
+  function persist(extra){
+    var c=collect();var body={fwId:fw.id,fwVersion:FW_VERSION,title:c.title,answers:c.answers};
+    for(var k in (extra||{}))body[k]=extra[k];
+    if(isNew){
+      return api("POST","/frameworks",body).then(function(saved){frameworks.push(saved);fwEditId=saved.id;return saved;});
+    }else{
+      body.id=fwEditId;
+      frameworks=frameworks.map(function(s){return s.id===fwEditId?Object.assign({},s,body):s;});
+      return api("PATCH","/frameworks/"+fwEditId,body);
+    }
+  }
+  $("#fwSave").onclick=function(){persist().then(function(){toast("已保存");renderFrameworks();});};
+  $("#fwGen").onclick=function(){
+    persist().then(function(){
+      var snap2=frameworks.filter(function(s){return s.id===fwEditId;})[0]||collect();
+      var p=fwPrompt(fw,snap2);$("#fwDiag").classList.remove("hidden");$("#fwPromptBox").value=p;copy(p);
+    });
+  };
+  $("#fwSaveVerdict").onclick=function(){
+    persist({verdict:$("#fwVerdict").value,reason:($("#fwReason").value||"").trim()}).then(function(){toast("已存判断");renderFrameworks();});
+  };
+}
+function fwPrompt(fw,snap){
+  var a=snap.answers||{};
+  var lines=fwQuestions(fw).map(function(q){
+    return q.q+"\n  → "+(a[q.k]||"（未填）");
+  }).join("\n");
+  return "我在用「行业分析（天时·地利·人和）」框架判断要不要在一个战场重仓投入，下面是我对各问的填答，请你当教练给判断，别客套：\n\n"+
+    "【战场】"+(snap.title||"（未命名）")+"\n\n"+lines+"\n\n"+
+    "判断规则（务必遵守）：\n"+
+    "- 「前置开关」是前置必要条件：场子若根本不认我产出的这种贡献，直接判\"别进\"。但这一格通常是绿灯，别花太多笔墨。\n"+
+    "- 「撬动」我历来做得到（能拉一群人一起干），别误判这一格。\n"+
+    "- 真正的死穴在「复制」：我的真实教训是——带了团队、也派了活，但没给团队\"自己能建\"的能力输入，团队成了我的手而非分身。我知道该做，常因\"自己干更快\"跳过。请重点盯这一格：如果只是派活没给能力输入，即使前置开关绿、撬动到位，结论也要往\"观望\"压，并直接点破\"你又只是在用团队当手，没在造分身\"。\n"+
+    "- 撬动→复制→归属是递进：归属依赖能复制。复制塌，归属保不住（东西被拆走就没你的功劳）。\n\n"+
+    "请直接给：\n1) 天时/地利/人和三层各自绿灯/黄灯/红灯，为什么；\n2) 最致命的那一格（尤其复制这一格：是给了能力输入，还是只派了活）；\n3) 结论：重仓 / 观望补缺口 / 撤损换场，一句话拍板；\n4) 若\"观望补缺口\"，最该先补哪个缺口。";
+}
+$("#newFwBtn").onclick=function(){fwEditId="";renderFrameworks();};
+
 function toggleNote(id){
   var p=$("#np_"+id),s=$("#sum_"+id);
   var willShow=p.classList.contains("hidden");
