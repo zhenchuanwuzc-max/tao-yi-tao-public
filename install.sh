@@ -1,5 +1,5 @@
 #!/bin/bash
-# 套一套 安装/接入脚本：配 launchd 自启 + 注册数据仓合并驱动 + 打 Dock .app。
+# 对味 安装/接入脚本：配 launchd 自启 + 注册数据仓合并驱动 + 打 Dock .app。
 # 两台机通用：代码 = 本脚本所在目录；数据 = ~/tao-yi-tao-data（缺失则尝试 clone）。
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,10 +8,11 @@ PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 DATA_DIR="$HOME/tao-yi-tao-data"
 DATA_REPO="git@github.com:zhenchuanwuzc-max/tao-yi-tao-data.git"
 PORT=8774
-APP="$HOME/Applications/套一套.app"
+APP="$HOME/Applications/对味.app"
+OLD_APP="$HOME/Applications/套一套.app"   # 改名前的旧 bundle，装完一并清掉（防 Dock 留孤儿）
 
 echo "════════════════════════════════════"
-echo "  套一套 installer"
+echo "  对味 installer"
 echo "  代码: $SCRIPT_DIR"
 echo "  数据: $DATA_DIR"
 echo "════════════════════════════════════"
@@ -68,21 +69,21 @@ build_swift_app() {
     # ⚠️ 必须分行：bash 同一 local 行声明多个变量时，右值在赋值前统一展开，
     #    `local dst=.. bin="$dst/.."` 里 bin 会拿到空的 $dst → 路径变成 /Contents/MacOS/...。
     local dst="$1"
-    local bin="$dst/Contents/MacOS/套一套"
+    local bin="$dst/Contents/MacOS/对味"
     command -v swiftc >/dev/null 2>&1 || return 1
     mkdir -p "$dst/Contents/MacOS" "$dst/Contents/Resources" || return 1
     swiftc "$SCRIPT_DIR/tao-shell.swift" -o "$bin" 2>/dev/null || return 1   # 编译失败=换 fallback
     [ -x "$bin" ] || return 1
-    [ -f "$SCRIPT_DIR/icon.icns" ] && cp "$SCRIPT_DIR/icon.icns" "$dst/Contents/Resources/套一套.icns" || true
+    [ -f "$SCRIPT_DIR/icon.icns" ] && cp "$SCRIPT_DIR/icon.icns" "$dst/Contents/Resources/对味.icns" || true
     cat > "$dst/Contents/Info.plist" <<PLIST || return 1
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleName</key><string>套一套</string>
-  <key>CFBundleDisplayName</key><string>套一套</string>
-  <key>CFBundleExecutable</key><string>套一套</string>
+  <key>CFBundleName</key><string>对味</string>
+  <key>CFBundleDisplayName</key><string>对味</string>
+  <key>CFBundleExecutable</key><string>对味</string>
   <key>CFBundleIdentifier</key><string>com.ocean.tao.shell</string>
-  <key>CFBundleIconFile</key><string>套一套</string>
+  <key>CFBundleIconFile</key><string>对味</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
@@ -107,7 +108,7 @@ build_osacompile_app() {
     return 0
 }
 
-TMP_APP="$(mktemp -d)/套一套.app"
+TMP_APP="$(mktemp -d)/对味.app"
 APP_KIND=""
 if build_swift_app "$TMP_APP"; then
     APP_KIND="原生独立窗口"
@@ -124,6 +125,9 @@ if [ -n "$APP_KIND" ] && [ -d "$TMP_APP" ]; then
     mv "$TMP_APP" "$APP"
     /usr/bin/touch "$APP" 2>/dev/null || true
     "$LSREG" -f "$APP" 2>/dev/null || true
+    if [ "$OLD_APP" != "$APP" ] && [ -e "$OLD_APP" ]; then
+        rm -rf "$OLD_APP" 2>/dev/null && echo "🧹 已删旧 bundle $OLD_APP（改名遗留）" || true
+    fi
     echo "✅ 已打包 $APP（$APP_KIND，拖进 Dock 即可）"
 else
     echo "⚠️ .app 打包失败（旧 app 已保留不动），可直接用浏览器开 http://localhost:$PORT"

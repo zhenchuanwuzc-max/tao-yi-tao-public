@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""套一套·措辞配方 本地服务（JSON-as-truth + git 同步，Python 标准库 http.server）
+"""对味·措辞配方 本地服务（JSON-as-truth + git 同步，Python 标准库 http.server）
 
 数据：data.json = {updated, recipes:[], logs:[], notes:[]}
   每条 item 带 id + created_at/updated_at；notes 另带 u_at/d_at（u/d 各自 LWW）。
@@ -446,7 +446,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    print(f"套一套 server → http://localhost:{PORT}   data={DATA_DIR}", flush=True)
+    print(f"对味 server → http://localhost:{PORT}   data={DATA_DIR}", flush=True)
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
 
 

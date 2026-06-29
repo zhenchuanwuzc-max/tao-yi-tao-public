@@ -1,5 +1,5 @@
 #!/bin/bash
-# 套一套 启动脚本（被 launchd 调用）。代码在 ~/tao-yi-tao/，数据在 ~/tao-yi-tao-data/。
+# 对味 启动脚本（被 launchd 调用）。代码在 ~/tao-yi-tao/，数据在 ~/tao-yi-tao-data/。
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
