@@ -250,6 +250,108 @@ def replace_all(recipes, logs, notes, cases=None):
     return read_data()
 
 
+# ---------- 检查更新（git 多机：fetch 比对 → ff-only pull → 重启）----------
+# 逻辑参照每日待办，但套一套是「git 仓 + localhost 套壳」，更新走 git 不走 Release。
+
+LAUNCHD_LABEL = "com.ocean.tao"
+_upd_lock = threading.Lock()
+_upd = {"status": "idle", "error": None}   # idle | pulling | restarting | error
+
+
+def _set_upd(**kw):
+    with _upd_lock:
+        _upd.update(kw)
+
+
+def get_upd():
+    with _upd_lock:
+        return dict(_upd)
+
+
+def _git(args, cwd, timeout=20):
+    """跑 git，禁交互（GIT_TERMINAL_PROMPT=0）；非 git 目录/超时/异常统一回 returncode=1。"""
+    if not cwd or not os.path.isdir(os.path.join(cwd, ".git")):
+        class _R:
+            returncode, stdout, stderr = 1, "", "no repo"
+        return _R()
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0")
+    try:
+        return subprocess.run(["git"] + args, cwd=cwd, env=env,
+                              capture_output=True, text=True, timeout=timeout)
+    except Exception as e:
+        class _R:
+            returncode, stdout, stderr = 1, "", str(e)
+        return _R()
+
+
+def read_version():
+    try:
+        with open(os.path.join(SCRIPT_DIR, "VERSION"), encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return "0.0.0"
+
+
+def _repo_status(repo):
+    """fetch origin/main 后回 (behind 提交数, 远端最新 commit 标题, 是否有未提交改动)"""
+    _git(["fetch", "origin", "main"], repo, timeout=20)
+    behind = _git(["rev-list", "--count", "HEAD..origin/main"], repo).stdout.strip()
+    subj = _git(["log", "-1", "--format=%s", "origin/main"], repo).stdout.strip()
+    dirty = bool(_git(["status", "--porcelain"], repo).stdout.strip())
+    try:
+        behind = int(behind or 0)
+    except ValueError:
+        behind = 0
+    return behind, subj, dirty
+
+
+def check_update():
+    code_behind, code_subj, code_dirty = _repo_status(SCRIPT_DIR)
+    data_behind, _, data_dirty = _repo_status(DATA_DIR)
+    remote_ver = _git(["show", "origin/main:VERSION"], SCRIPT_DIR).stdout.strip()
+    return {
+        "current": read_version(),
+        "latest_ver": remote_ver or read_version(),
+        "behind": code_behind,
+        "data_behind": data_behind,
+        "latest_msg": code_subj,
+        "dirty": code_dirty or data_dirty,
+    }
+
+
+def apply_update():
+    """ff-only pull 代码仓 + 数据仓，再 detached 重启 launchd 服务（kickstart -k）。"""
+    code_behind, _, code_dirty = _repo_status(SCRIPT_DIR)
+    data_behind, _, data_dirty = _repo_status(DATA_DIR)
+    if code_dirty or data_dirty:
+        raise RuntimeError("本地有未提交改动，已暂停自动更新（避免覆盖你的改动）")
+    if not code_behind and not data_behind:
+        return {"ok": True, "started": False, "note": "已是最新"}
+
+    def _worker():
+        try:
+            _set_upd(status="pulling", error=None)
+            if code_behind:
+                r = _git(["pull", "--ff-only", "origin", "main"], SCRIPT_DIR, timeout=90)
+                if r.returncode != 0:
+                    raise RuntimeError("代码仓 pull 失败：" + (r.stderr or "")[:140])
+            if data_behind:
+                r = _git(["pull", "--ff-only", "origin", "main"], DATA_DIR, timeout=90)
+                if r.returncode != 0:
+                    raise RuntimeError("数据仓 pull 失败：" + (r.stderr or "")[:140])
+            _set_upd(status="restarting")
+            # kickstart -k 会杀掉当前 server 并重启；detached(start_new_session) 让它在自身被杀后仍存活。
+            subprocess.Popen(
+                ["/bin/bash", "-c",
+                 f"sleep 1; launchctl kickstart -k gui/{os.getuid()}/{LAUNCHD_LABEL}"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        except Exception as e:
+            _set_upd(status="error", error=str(e))
+
+    threading.Thread(target=_worker, daemon=True).start()
+    return {"ok": True, "started": True}
+
+
 # ---------- HTTP ----------
 
 class Handler(BaseHTTPRequestHandler):
@@ -285,6 +387,13 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/health":
             d = read_data()
             self._send(200, {"ok": True, "counts": {k: len(d[k]) for k in COLLECTIONS}})
+        elif path == "/check-update":
+            try:
+                self._send(200, check_update())
+            except Exception as e:
+                self._send(200, {"error": str(e)})
+        elif path == "/update-progress":
+            self._send(200, get_upd())
         else:
             self._send(404, {"error": "not found"})
 
@@ -301,6 +410,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, add_item("frameworks", b))
         elif path == "/import":
             self._send(200, replace_all(b.get("recipes"), b.get("logs"), b.get("notes"), b.get("cases")))
+        elif path == "/apply-update":
+            try:
+                self._send(200, apply_update())
+            except Exception as e:
+                self._send(200, {"ok": False, "error": str(e)})
         else:
             self._send(404, {"error": "not found"})
 

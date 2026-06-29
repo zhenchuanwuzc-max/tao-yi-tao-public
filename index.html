@@ -138,6 +138,15 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
 .hidden{display:none}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:13px;padding:9px 18px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
 .toast.show{opacity:.95}
+/* === 检查更新 banner === */
+.upbanner{display:none;align-items:center;gap:10px;margin:0 0 14px;padding:9px 14px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;box-shadow:0 2px 8px rgba(83,74,183,.25)}
+.upbanner.show{display:flex}
+.upbanner .ub-t{flex:1}
+.upbanner .ub-v{font-weight:600}
+.upbanner .ub-go{background:#fff;color:var(--accent);border:none;padding:5px 12px;border-radius:5px;cursor:pointer;font-weight:600;font-size:12px}
+.upbanner .ub-go:hover{opacity:.92}
+.upbanner .ub-x{background:transparent;border:none;color:#fff;opacity:.7;cursor:pointer;font-size:17px;line-height:1;padding:0 2px}
+.upbanner .ub-x:hover{opacity:1}
 /* 框架 */
 .grid.fwmode{display:block}   /* 框架视图脱离话术卡片网格，用全宽单栏 */
 .fwcard{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:18px 22px;margin-bottom:14px}
@@ -172,6 +181,11 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
     <h1>套一套 · 措辞配方</h1>
     <div class="sub">把"我想要"说成"对你有好处"</div>
   </header>
+  <div class="upbanner" id="upBanner">
+    <span class="ub-t">🆕 有新版本 <span class="ub-v" id="upVer"></span> · <span id="upMsg"></span></span>
+    <button class="ub-go" id="upGo">立即更新</button>
+    <button class="ub-x" id="upX" title="忽略此版本">×</button>
+  </div>
   <div class="principle">核心原则：别从自己出发——先揣摩对方的心，再用"对他有利"的措辞说。</div>
 
   <nav class="tabs">
@@ -871,6 +885,53 @@ $("#importFile").onchange=function(){
   };
   rd.readAsText(f);this.value="";
 };
+
+/* ---------- 检查更新（git 多机，逻辑参照每日待办）---------- */
+function checkUpdate(verbose){
+  if(verbose)toast("⏳ 检查更新中…");
+  fetch("/check-update",{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){
+    if(d.error){if(verbose)toast("❌ 检查失败："+String(d.error).slice(0,50));return;}
+    var behind=(d.behind||0)+(d.data_behind||0);
+    if(behind>0){
+      var sig=(d.latest_msg||"")+"@"+behind;
+      if(verbose)localStorage.removeItem("taoDismissed");
+      if(localStorage.getItem("taoDismissed")!==sig){
+        $("#upVer").textContent=d.latest_ver?("v"+d.latest_ver):"";
+        $("#upMsg").textContent=(d.latest_msg||"有更新").slice(0,40);
+        var bn=$("#upBanner");bn.classList.add("show");bn.dataset.sig=sig;bn.dataset.dirty=d.dirty?"1":"";
+      }
+      if(verbose)toast("🆕 发现新版本（落后 "+behind+" 项）");
+    }else if(verbose){
+      toast(d.dirty?"⚠ 本地有未提交改动，未检查远端":"✅ 已是最新 v"+d.current);
+    }
+  }).catch(function(){if(verbose)toast("❌ server 无响应");});
+}
+function pollUpdate(){
+  fetch("/update-progress",{cache:"no-store"}).then(function(r){return r.json();}).then(function(p){
+    if(p.status==="error"){toast("❌ 更新失败："+String(p.error||"").slice(0,50));return;}
+    if(p.status==="restarting"){toast("✅ 更新完成，正在重启…");setTimeout(function(){location.reload();},3500);return;}
+    if(p.status==="pulling")toast("⬇ 更新中…");
+    setTimeout(pollUpdate,500);
+  }).catch(function(){toast("✅ 正在重启…");setTimeout(function(){location.reload();},3500);});
+}
+$("#upGo").onclick=function(){
+  if($("#upBanner").dataset.dirty){toast("⚠ 本地有未提交改动，请先处理再更新");return;}
+  if(!confirm("拉取最新版本并重启套一套？"))return;
+  toast("⏳ 准备更新…");
+  fetch("/apply-update",{method:"POST"}).then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){toast("❌ "+String(d.error||"更新失败").slice(0,50));return;}
+    if(d.started===false){toast("✅ 已是最新");$("#upBanner").classList.remove("show");return;}
+    $("#upBanner").classList.remove("show");pollUpdate();
+  }).catch(function(){toast("❌ 网络错误");});
+};
+$("#upX").onclick=function(){
+  var sig=$("#upBanner").dataset.sig;
+  if(sig)localStorage.setItem("taoDismissed",sig);
+  $("#upBanner").classList.remove("show");
+};
+/* 启动 2s 后静默检查 + 之后每小时一次；菜单栏「检查更新…」走 checkUpdate(true) */
+setTimeout(function(){checkUpdate(false);},2000);
+setInterval(function(){checkUpdate(false);},3600*1000);
 
 /* ---------- init ---------- */
 bindMind();

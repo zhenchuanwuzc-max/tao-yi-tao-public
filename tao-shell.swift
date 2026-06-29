@@ -42,6 +42,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         mainMenu.addItem(appItem)
         let appMenu = NSMenu()
         appItem.submenu = appMenu
+        appMenu.addItem(withTitle: "检查更新…", action: #selector(checkUpdate), keyEquivalent: "")
+        appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "刷新", action: #selector(reload), keyEquivalent: "r")
         appMenu.addItem(withTitle: "关闭窗口", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         appMenu.addItem(.separator())
@@ -50,6 +52,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     }
 
     @objc func reload() { retries = 0; load() }   // 重新拉服务器(不是 webView.reload,避免卡在兜底页)
+
+    // 菜单「检查更新…」→ 触发页面里的 checkUpdate(true)，逻辑全在 index.html/server.py。
+    @objc func checkUpdate() {
+        webView.evaluateJavaScript("if(typeof checkUpdate==='function')checkUpdate(true)", completionHandler: nil)
+    }
 
     func load() {
         webView.load(URLRequest(url: URL(string: URL_STR)!))
