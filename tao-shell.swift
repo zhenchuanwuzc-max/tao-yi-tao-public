@@ -8,7 +8,7 @@ import WebKit
 let PORT = ProcessInfo.processInfo.environment["TAO_PORT"] ?? "8774"
 let URL_STR = "http://localhost:\(PORT)/"
 
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
     var window: NSWindow!
     var webView: WKWebView!
     var retries = 0
@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
 
         webView = WKWebView(frame: rect)
         webView.navigationDelegate = self
+        webView.uiDelegate = self          // 不接这个，页面里 confirm()/alert() 会被 WKWebView 静默吞掉（直接返回 false）
         webView.autoresizingMask = [.width, .height]
         window.contentView = webView
 
@@ -92,6 +93,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     }
 
     func webView(_ wv: WKWebView, didFinish nav: WKNavigation!) { retries = 0 }
+
+    // MARK: - WKUIDelegate：把 JS 的 alert/confirm 桥到原生 NSAlert。
+    // WKWebView 默认不实现这些面板——没有本段时 confirm() 直接返回 false，
+    // 页面里所有「删除配方 / 导入替换 / 立即更新」确认框会静默失败（点了没反应）。
+    func webView(_ wv: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+        let a = NSAlert()
+        a.messageText = "对味"
+        a.informativeText = message
+        a.addButton(withTitle: "好")
+        a.beginSheetModal(for: window) { _ in completionHandler() }
+    }
+
+    func webView(_ wv: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+        let a = NSAlert()
+        a.messageText = "对味"
+        a.informativeText = message
+        a.addButton(withTitle: "确定")
+        a.addButton(withTitle: "取消")
+        a.beginSheetModal(for: window) { resp in
+            completionHandler(resp == .alertFirstButtonReturn)
+        }
+    }
 
     func showFallback() {
         let html = """
