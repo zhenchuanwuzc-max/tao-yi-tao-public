@@ -451,6 +451,10 @@ function setNoteLocal(id,patch){var n=noteOf(id);if(!n.id){n={id:id,u:"",d:""};n
 function hasTpls(r){return r&&r.tpls&&r.tpls.length;}
 function esc(s){return (s||"").replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function attr(s){return esc(String(s||"")).replace(/"/g,"&quot;");}
+function localDateISO(date){
+  var d=date||new Date(),local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,10);
+}
 
 /* ---------- 通用 ---------- */
 function $(s){return document.querySelector(s);}
@@ -678,7 +682,7 @@ function bindTrueQuestionEvents(g){
   var add=g.querySelector("[data-tqnew]");
   if(add)add.onclick=function(){
     if(trueQuestionDraft){toast("先保存或取消当前新问题");return;}
-    trueQuestionDraft={raisedAt:new Date().toISOString().slice(0,10)};renderFrameworks();
+    trueQuestionDraft={raisedAt:localDateISO()};renderFrameworks();
     var draft=g.querySelector('[data-tqdraft="1"]');if(draft)draft.scrollIntoView({behavior:"smooth",block:"nearest"});
   };
   g.querySelectorAll('[data-tq="verdict"]').forEach(function(select){select.onchange=function(){select.dataset.v=select.value;};});

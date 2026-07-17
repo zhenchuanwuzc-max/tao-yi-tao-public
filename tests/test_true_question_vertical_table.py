@@ -37,6 +37,14 @@ class TrueQuestionVerticalTableTests(unittest.TestCase):
         self.assertIn('data-tqaction="prompt"', HTML)
         self.assertIn('data-tqaction="cancel"', HTML)
 
+    def test_new_question_date_uses_local_timezone(self):
+        self.assertIn("function localDateISO(date)", HTML)
+        self.assertIn("trueQuestionDraft={raisedAt:localDateISO()}", HTML)
+        self.assertNotIn(
+            'trueQuestionDraft={raisedAt:new Date().toISOString().slice(0,10)}',
+            HTML,
+        )
+
     def test_industry_editor_contract_remains(self):
         self.assertIn('id:"fw_industry"', HTML)
         self.assertIn("function renderFwEditor()", HTML)
