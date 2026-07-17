@@ -5,6 +5,7 @@ __pycache__/
 _backups/
 .update/
 .worktrees/
+.superpowers/
 
 # 本地编辑器/harness 配置
 .claude/
