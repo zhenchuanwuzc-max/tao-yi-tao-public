@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 _backups/
 .update/
+.worktrees/
 
 # 本地编辑器/harness 配置
 .claude/
