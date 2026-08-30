@@ -37,6 +37,8 @@ bash ~/tao-yi-tao/install.sh                # 配 launchd 自启 + 打原生 .ap
 
 ## 更新记录
 
+- **0.6.2** — 修「导出备份(JSON)」在 Dock 原生窗口里点了没反应：导出是 `blob:` + `<a download>`，WKWebView 默认把这种导航当普通跳转丢掉，既不显示也不落盘（跟 0.4.x 那次 `confirm()` 被静默吞是同一类坑，只是换成了 `WKDownload` 这条链）。壳补 `decidePolicyFor navigationAction`（`shouldPerformDownload` → `.download`）+ `WKDownloadDelegate`：出存储位置面板、落盘、完成后在 Finder 里选中；取消也正确回 `nil`。页面侧顺手把导出锚点改成先进 DOM 再 click、用完 remove 并 `revokeObjectURL`（游离锚点在 WKWebView 里不稳定，且原来每导出一次漏一个 blob URL）。实测：不打这个补丁时该导航带 `shouldPerformDownload=true` 但被丢弃，打上后 6,624 字节备份正常存盘。
+
 - **0.6.1** — 识人界面改版：判定结果从文字卡片改成 **2×2 象限图**——四格标出老虎/孔雀/考拉/猫头鹰，这个人以一个点落在图上（连续坐标：越贴角越典型、越靠中间越混合），命中格子高亮。图在最上面，8 个观察问题挪到图下面，勾选时点实时移动；改名字时图上标签同步。
 
 - **0.6.0** — 新增「识人」界面：对方沟通风格识别（老虎 / 孔雀 / 考拉 / 猫头鹰四象限）。8 条行为观察自动落格、平局并列不硬判、每格给出递法与载体、可生成 AI 复核提示词；画像可带进「话术」的心思分析并自动注入风格段。全程守一条边界——**风格只决定怎么递，不决定说什么**。附带修两处既有问题：`data.json` 不存在时 `read_data()` 绕过补全导致启动即 KeyError（新机器首次启动必踩）；导出/导入漏掉 `cases`/`frameworks`，且导入会把备份里没有的 collection 静默清空。

@@ -1495,8 +1495,13 @@ function fmtTime(iso){try{var d=new Date(iso);return (d.getMonth()+1)+"/"+d.getD
 $("#exportBtn").onclick=function(){
   var data=JSON.stringify({recipes:userRecipes,logs:logs,notes:notes,cases:cases,frameworks:frameworks,profiles:profiles,exportedAt:new Date().toISOString()},null,2);
   var blob=new Blob([data],{type:"application/json"});
-  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download="对味备份_"+new Date().toISOString().slice(0,10)+".json";a.click();
+  /* 锚点必须真的进 DOM 再 click：游离锚点在 WKWebView(原生壳)里不稳定触发下载导航。
+     用完立刻移除 + revokeObjectURL，否则每次导出漏一个 blob URL。 */
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;
+  a.download="对味备份_"+new Date().toISOString().slice(0,10)+".json";
+  a.style.display="none";document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},0);
   toast("已导出");
 };
 $("#importBtn").onclick=function(){$("#importFile").click();};

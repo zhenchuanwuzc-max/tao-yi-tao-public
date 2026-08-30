@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     var window: NSWindow!
     var webView: WKWebView!
     var retries = 0
+    var downloadDest: URL?      // 本次下载的落点，downloadDidFinish 时在 Finder 里选中
     let maxRetries = 8          // launchd 自启秒级窗口，~8 次×0.8s 足够覆盖
 
     func applicationDidFinishLaunching(_ note: Notification) {
@@ -94,6 +95,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     func webView(_ wv: WKWebView, didFinish nav: WKNavigation!) { retries = 0 }
 
+    // MARK: - 下载：页面里「导出备份(JSON)」是 blob: + <a download>，WKWebView 默认把它当
+    // 一次普通导航、既不显示也不落盘 —— 点了完全没反应（跟上面 alert/confirm 是同一类静默吞）。
+    // 实测：不接本段时该导航带 shouldPerformDownload=true 但被丢弃；接上后文件正常存盘。
+    func webView(_ wv: WKWebView, decidePolicyFor action: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if #available(macOS 11.3, *), action.shouldPerformDownload {
+            decisionHandler(.download)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+
+    @available(macOS 11.3, *)
+    func webView(_ wv: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
+        download.delegate = self
+    }
+
+    @available(macOS 11.3, *)
+    func webView(_ wv: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
+        download.delegate = self
+    }
+
     // MARK: - WKUIDelegate：把 JS 的 alert/confirm 桥到原生 NSAlert。
     // WKWebView 默认不实现这些面板——没有本段时 confirm() 直接返回 false，
     // 页面里所有「删除配方 / 导入替换 / 立即更新」确认框会静默失败（点了没反应）。
@@ -132,6 +155,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         </body></html>
         """
         webView.loadHTMLString(html, baseURL: nil)
+    }
+}
+
+// MARK: - WKDownloadDelegate：出存储位置面板 → 落盘 → 在 Finder 里选中。
+// macOS 11.3 才有 WKDownload；LSMinimumSystemVersion 是 11.0，所以整段带可用性门。
+@available(macOS 11.3, *)
+extension AppDelegate: WKDownloadDelegate {
+    func download(_ download: WKDownload, decideDestinationUsing response: URLResponse,
+                  suggestedFilename: String, completionHandler: @escaping (URL?) -> Void) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = suggestedFilename
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        panel.canCreateDirectories = true
+        NSApp.activate(ignoringOtherApps: true)
+        panel.beginSheetModal(for: window) { [weak self] resp in
+            guard resp == .OK, let url = panel.url else {
+                self?.downloadDest = nil
+                completionHandler(nil)      // 用户取消：必须回 nil，不能不调
+                return
+            }
+            // WKDownload 要求目标不存在，同名旧备份先删掉（面板已让用户确认过覆盖）
+            try? FileManager.default.removeItem(at: url)
+            self?.downloadDest = url
+            completionHandler(url)
+        }
+    }
+
+    func downloadDidFinish(_ download: WKDownload) {
+        guard let url = downloadDest else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+        downloadDest = nil
+    }
+
+    func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
+        downloadDest = nil
+        let a = NSAlert()
+        a.messageText = "导出失败"
+        a.informativeText = error.localizedDescription
+        a.addButton(withTitle: "好")
+        a.beginSheetModal(for: window, completionHandler: nil)
     }
 }
 
