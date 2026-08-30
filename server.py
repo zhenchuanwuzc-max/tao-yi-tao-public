@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """对味·措辞配方 本地服务（JSON-as-truth + git 同步，Python 标准库 http.server）
 
-数据：data.json = {updated, recipes:[], logs:[], notes:[]}
+数据：data.json = {updated, recipes:[], logs:[], notes:[], cases:[], frameworks:[], profiles:[]}
   每条 item 带 id + created_at/updated_at；notes 另带 u_at/d_at（u/d 各自 LWW）。
   内置 7 配方在 index.html 代码里（BUILTIN），不进 data.json——只有用户自加配方进 recipes。
 
@@ -17,7 +17,13 @@
   DELETE /logs/<id>     删
   PUT    /notes/<rid>   upsert 理解/诊断 {u?,d?}（各自打时间戳）
   DELETE /notes/<rid>   删
-  POST   /import        {recipes,logs,notes} 整体替换（迁移用）
+  POST   /cases         新增配方案例
+  DELETE /cases/<id>    删
+  POST   /frameworks    新增框架快照
+  PATCH  /frameworks/<id>  改 / DELETE 删
+  POST   /profiles      新增沟通风格画像（识人）
+  PATCH  /profiles/<id>    改 / DELETE 删
+  POST   /import        整体替换（迁移用）；只替换 body 里出现的 collection，未出现的保留
 
 端口 env TAO_PORT(默认 8774)；数据 env TAO_DATA_DIR(默认 ~/tao-yi-tao-data)。
 范式照搬 quotes-app：_atomic_write + 锁内 read-modify-write + schedule_sync 防抖。
@@ -52,7 +58,7 @@ if not DATA_DIR:
 DATA_DIR = os.path.expanduser(DATA_DIR)
 DATA_FILE = os.path.join(DATA_DIR, "data.json")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-COLLECTIONS = ("recipes", "logs", "notes", "cases", "frameworks")
+COLLECTIONS = ("recipes", "logs", "notes", "cases", "frameworks", "profiles")
 
 INDEX_HTML = "<h1>index.html not loaded</h1>"
 
@@ -78,9 +84,10 @@ _lock = threading.RLock()
 
 def read_data():
     if not os.path.exists(DATA_FILE):
-        return {"updated": now_iso(), "recipes": [], "logs": [], "notes": []}
-    with open(DATA_FILE, encoding="utf-8") as f:
-        d = json.load(f)
+        d = {"updated": now_iso()}          # 空库也要往下走补全，别在这里直接 return
+    else:
+        with open(DATA_FILE, encoding="utf-8") as f:
+            d = json.load(f)
     for k in COLLECTIONS:
         if not isinstance(d.get(k), list):
             d[k] = []
@@ -219,7 +226,13 @@ def delete_note(rid):
     return deleted
 
 
-def replace_all(recipes, logs, notes, cases=None):
+def replace_all(payload):
+    """整体替换（导入/迁移用）。
+
+    只替换 payload 里显式出现的 collection——未出现的原样保留，
+    避免老备份文件缺字段时把 cases/frameworks/profiles 静默清空。
+    """
+    payload = payload or {}
     ts = now_iso()
 
     def stamp(x):
@@ -229,22 +242,25 @@ def replace_all(recipes, logs, notes, cases=None):
         x["updated_at"] = ts
         return x
 
-    nn = []
-    for x in (notes or []):
-        x = dict(x)
-        if not x.get("id"):
-            continue
-        x.setdefault("u", "")
-        x.setdefault("d", "")
-        x["u_at"] = ts if x.get("u") else None
-        x["d_at"] = ts if x.get("d") else None
-        nn.append(x)
     with _lock:
         d = read_data()
-        d["recipes"] = [stamp(x) for x in (recipes or [])]
-        d["logs"] = [stamp(x) for x in (logs or [])]
-        d["notes"] = nn
-        d["cases"] = [stamp(x) for x in (cases or [])]
+        for coll in COLLECTIONS:
+            if payload.get(coll) is None:
+                continue
+            if coll == "notes":
+                nn = []
+                for x in payload["notes"]:
+                    x = dict(x)
+                    if not x.get("id"):
+                        continue
+                    x.setdefault("u", "")
+                    x.setdefault("d", "")
+                    x["u_at"] = ts if x.get("u") else None
+                    x["d_at"] = ts if x.get("d") else None
+                    nn.append(x)
+                d["notes"] = nn
+            else:
+                d[coll] = [stamp(x) for x in payload[coll]]
         _atomic_write(d)
     schedule_sync()
     return read_data()
@@ -408,8 +424,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, add_item("cases", b))
         elif path == "/frameworks":
             self._send(200, add_item("frameworks", b))
+        elif path == "/profiles":
+            self._send(200, add_item("profiles", b))
         elif path == "/import":
-            self._send(200, replace_all(b.get("recipes"), b.get("logs"), b.get("notes"), b.get("cases")))
+            self._send(200, replace_all(b))
         elif path == "/apply-update":
             try:
                 self._send(200, apply_update())
@@ -421,7 +439,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_PATCH(self):
         parts = urlparse(self.path).path.strip("/").split("/")
         b = self._read_body()
-        if len(parts) == 2 and parts[0] in ("recipes", "logs", "frameworks"):
+        if len(parts) == 2 and parts[0] in ("recipes", "logs", "frameworks", "profiles"):
             t = patch_item(parts[0], parts[1], b)
             self._send(200 if t else 404, t or {"error": "not found"})
         else:
@@ -437,7 +455,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         parts = urlparse(self.path).path.strip("/").split("/")
-        if len(parts) == 2 and parts[0] in ("recipes", "logs", "cases", "frameworks"):
+        if len(parts) == 2 and parts[0] in ("recipes", "logs", "cases", "frameworks", "profiles"):
             self._send(200, {"deleted": delete_item(parts[0], parts[1])})
         elif len(parts) == 2 and parts[0] == "notes":
             self._send(200, {"deleted": delete_note(parts[1])})

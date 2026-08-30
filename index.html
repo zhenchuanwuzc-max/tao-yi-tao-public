@@ -202,6 +202,45 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
 .tq-updated{font-size:11px;color:var(--hint)}.tq-actions{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .tq-verdict[data-v="真问题"]{color:var(--bad)}.tq-verdict[data-v="待验证"]{color:var(--warn)}.tq-verdict[data-v="假问题"]{color:var(--ok)}
 .tq-empty{padding:22px 14px;text-align:center;color:var(--hint);font-size:12px;border:.5px dashed var(--line2);border-radius:9px}
+/* 识人 */
+.pf-warn{font-size:12px;line-height:1.65;color:var(--warn);background:var(--warn-bg);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:14px}
+.pf-warn b{font-weight:600}
+.pfcard{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px}
+.pfcard .pt{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.pfcard .pname{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.pfcard .prel{font-size:11px;color:var(--hint);border:.5px solid var(--line);border-radius:20px;padding:1px 8px;font-weight:400}
+.qbadge{font-size:12px;padding:2px 10px;border-radius:20px;font-weight:500;border:.5px solid transparent}
+.qbadge[data-q="老虎"]{color:var(--bad);background:var(--bad-bg)}
+.qbadge[data-q="孔雀"]{color:var(--warn);background:var(--warn-bg)}
+.qbadge[data-q="考拉"]{color:var(--ok);background:var(--ok-bg)}
+.qbadge[data-q="猫头鹰"]{color:var(--accent-text);background:var(--accent-bg)}
+.qbadge.sm{font-size:11px;padding:1px 8px;opacity:.75}
+.pfcard .pone{font-size:13px;color:var(--muted);margin-top:6px}
+.pfcard .pops{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.pfmix{font-size:12px;color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:6px 10px;margin-top:9px}
+.obs{margin:4px 0 14px}
+.obs .orow{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;padding:6px 0;border-bottom:.5px solid var(--line)}
+.obs .orow:last-child{border-bottom:0}
+.obs .oq{font-size:12.5px;color:var(--muted)}
+.obs .opick{display:flex;gap:6px;flex-wrap:wrap}
+.obs .opick button{font:inherit;font-size:12.5px;padding:5px 12px;border-radius:var(--radius-sm);border:.5px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;flex:1;min-width:110px}
+.obs .opick button.on{background:var(--accent-bg);color:var(--accent-text);border-color:var(--accent);font-weight:500}
+.pfverdict{background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin:14px 0}
+.pfverdict .vh{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
+.pfverdict .vaxis{font-size:12px;color:var(--hint)}
+.pfverdict .vwant{font-size:13px;color:var(--text);margin-bottom:10px}
+.pfcols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pfcols .ch{font-size:12px;font-weight:600;margin-bottom:5px}
+.pfcols .do .ch{color:var(--ok)}
+.pfcols .dont .ch{color:var(--bad)}
+.pfcols ul{margin:0;padding-left:17px}
+.pfcols li{font-size:12.5px;color:var(--muted);line-height:1.6;margin:2px 0}
+.pfmedia{font-size:12.5px;color:var(--muted);margin-top:11px;padding-top:9px;border-top:.5px solid var(--line)}
+.pfmedia b{color:var(--text);font-weight:500}
+.mind-pf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.mind-pf select{max-width:190px}
+.pfhint{font-size:12px;color:var(--accent-text);background:var(--accent-bg);border-radius:6px;padding:7px 11px;margin-top:9px;line-height:1.6}
+@media (max-width:560px){.pfcols{grid-template-columns:1fr}.obs .orow{grid-template-columns:1fr;gap:4px}}
 @media (max-width:560px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.tq-grid{grid-template-columns:116px minmax(0,1fr)}.tq-label,.tq-cell{padding:8px}.tq-sheet-head{padding:9px 11px}}
 </style>
 </head>
@@ -220,6 +259,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
 
   <nav class="tabs">
     <button data-tab="lib" class="on">配方库</button>
+    <button data-tab="people">识人</button>
     <button data-tab="compose">话术</button>
     <button data-tab="review">复盘</button>
   </nav>
@@ -255,11 +295,29 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
     <div class="grid" id="libGrid"></div>
   </section>
 
+  <!-- ============ 识人 ============ -->
+  <section id="people" class="view">
+    <div class="toolbar">
+      <div class="spacer"></div>
+      <button class="btn pri" id="newPfBtn">+ 新建画像</button>
+    </div>
+    <div class="pf-warn">
+      风格只决定<b>怎么递</b>（长度 / 载体 / 开场），不决定<b>说什么</b>——内容仍由对方的 KPI 和他上级刚给的压力定。<br>
+      这是<b>行为归类，不是人格判决</b>：只拿来选载体，别拿来给人定性。风格轴 ≠ T/F ≠ 内控外控，三根轴不互推。
+    </div>
+    <div id="pfEditor"></div>
+    <div id="pfList"></div>
+  </section>
+
   <!-- ============ 话术 ============ -->
   <section id="compose" class="view">
 
     <div class="mindbox">
       <div class="mind-head">① 对方心思分析<span class="mind-sub">先揣摩对方的心，再决定怎么说</span></div>
+      <div class="mind-pf">
+        <span style="font-size:12px;color:var(--muted);flex:none">从识人库带入</span>
+        <select id="pfSel"></select>
+      </div>
       <div class="ftbl">
         <div class="tr"><div class="th">对谁说 / 关系</div><div class="td"><input id="m_who" placeholder="例：老王（直属上级）"></div></div>
         <div class="tr"><div class="th">想让TA做</div><div class="td"><input id="m_ask" placeholder="例：周五前定下方案"></div></div>
@@ -267,6 +325,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
         <div class="tr"><div class="th slot">TA担心/讨厌</div><div class="td"><input id="m_fear" placeholder="TA怕什么 / 不想要什么…"></div></div>
         <div class="tr"><div class="th slot">TA现在状态</div><div class="td"><input id="m_state" placeholder="忙 / 有压力 / 心情…（选填）"></div></div>
       </div>
+      <div class="pfhint hidden" id="pfHint"></div>
       <div class="np-actions"><button class="btn pri sm" id="mindBtn">让 Claude 分析对方心思 + 荐配方</button></div>
       <div class="diagbox hidden" id="mindBox">
         <div class="np-hint">分析提示词已复制 → 贴进 Claude（这里 / claude.ai / Claude Code）。复制失败就手选下面这段：</div>
@@ -426,8 +485,70 @@ var BUILTIN_FW=[{
 function findFw(id){return BUILTIN_FW.filter(function(f){return f.id===id;})[0];}
 function fwQuestions(fw){var qs=[];(fw.layers||[]).forEach(function(L){(L.questions||[]).forEach(function(q){qs.push(q);});});return qs;}
 
+/* ---------- 沟通风格四象限（内置知识，不进 data.json）----------
+   两根轴：任务导向↔人际导向 / 快·主动↔慢·谨慎。四格 = 两轴交叉。
+   只做「行为观察归类」，不做人格测评——用途是选载体和长度，不是给人定性。 */
+var STYLE_VERSION=1;
+var OBS=[
+  {k:"o1",axis:"task",q:"见面开场",     a:"直接切事",          b:"先寒暄两句"},
+  {k:"o2",axis:"task",q:"他追问的是",   a:"什么时候好 / 结果多少", b:"谁来做 / 大家怎么想"},
+  {k:"o3",axis:"task",q:"给你反馈时",   a:"直接说问题",        b:"先肯定再委婉提"},
+  {k:"o4",axis:"task",q:"做决定靠",     a:"数据和结果",        b:"关系和感受"},
+  {k:"o5",axis:"pace",q:"说话节奏",     a:"快、常抢话",        b:"慢、留白多"},
+  {k:"o6",axis:"pace",q:"被你打断时",   a:"接着讲自己的",      b:"停下来让你说"},
+  {k:"o7",axis:"pace",q:"面对新提议",   a:"当场拍 / 先说可以试", b:"再想想 / 先问风险"},
+  {k:"o8",axis:"pace",q:"给你回消息",   a:"秒回、短",          b:"隔一阵、想好再回"}
+];
+var QUADS={
+  "老虎":{axis:"任务 × 快",one:"要结论、要控局",
+    want:"三句之内知道你要什么、什么时候好、谁负责。",
+    dos:["第一句就给结论，别铺背景","砍到 3-5 句，细节挂链接","给判断 + 承诺，不给选择题","口头 / 短消息就够，不必长文档"],
+    donts:["从背景讲到结论（他第三句就走神）","把决策抛回去（“您看呢”）","模糊词：大概 / 可能 / 看情况"],
+    media:"口头、当面、钉钉短消息"},
+  "孔雀":{axis:"人际 × 快",one:"要故事、要认可、要能转述的说法",
+    want:"一个他能拿去跟别人讲的版本，外加“你在往前推”的体感。",
+    dos:["给画面和故事，别只给表格","把成果做成他能转述的一句话","当面 / 语音优于纯文字","认可他的判断，给他署名感","关键结论补一条书面确认（他会忘）"],
+    donts:["纯数据罗列、没有叙事","当众驳他面子","只甩长文档不当面讲"],
+    media:"先非正式聊过，再正式场合确认，结论落书面"},
+  "考拉":{axis:"人际 × 慢",one:"要安全感，怕被推着走",
+    want:"知道这事不会打乱他现在的秩序，而且他不用当场表态。",
+    dos:["先说清楚“不会改变什么”","给时间，别逼当场拍板","一对一优于公开场合","把风险和退路一起给出来"],
+    donts:["制造紧迫感逼他","在会上突然点他表态","一次抛太多变化"],
+    media:"一对一、提前打招呼，留消化时间"},
+  "猫头鹰":{axis:"任务 × 慢",one:"要证据链、要口径经得起查",
+    want:"每个数字有出处、每个结论有推导，不确定的地方你自己先标出来。",
+    dos:["用数字，不用形容词","写清口径和数据来源","主动标出不确定项和边界","书面优于口头，留出他核对的时间"],
+    donts:["拿感觉和形容词当论据","把没验证的推断说成事实","催他当场给结论"],
+    media:"书面文档 / 邮件，提前发，别当场逼看"}
+};
+function obsOfAxis(ax){return OBS.filter(function(o){return o.axis===ax;});}
+function axisScore(obs,ax){
+  var a=0,n=0;
+  obsOfAxis(ax).forEach(function(o){var v=(obs||{})[o.k];if(v==="a"){a++;n++;}else if(v==="b"){n++;}});
+  return {a:a,n:n};
+}
+/* 判定：每轴按「已答项里选 a 的比例」定方向，0.5 为平局。
+   平局不硬判——把两个候选都亮出来（混合体是常态，不是异常）。 */
+function judgeStyle(obs){
+  var t=axisScore(obs,"task"),p=axisScore(obs,"pace");
+  var r={t:t,p:p,cands:[],ready:false,note:""};
+  if(!t.n||!p.n){r.note="两根轴都要至少答一条才判得了。";return r;}
+  var tr=t.a/t.n,pr=p.a/p.n;
+  var tOpt=tr>0.5?[true]:(tr<0.5?[false]:[true,false]);
+  var pOpt=pr>0.5?[true]:(pr<0.5?[false]:[true,false]);
+  tOpt.forEach(function(th){pOpt.forEach(function(ph){
+    r.cands.push(th?(ph?"老虎":"猫头鹰"):(ph?"孔雀":"考拉"));
+  });});
+  r.ready=true;
+  if(r.cands.length===4){r.ready=false;r.note="两根轴都是平局 —— 证据不够，再观察几次或用下面的 AI 判断。";}
+  else if(r.cands.length===2){r.note="有一根轴是平局，多半是混合体（很常见）。两边的递法都看一眼，按主场景挑。";}
+  return r;
+}
+function pfOf(id){for(var i=0;i<profiles.length;i++){if(profiles[i].id===id)return profiles[i];}return null;}
+function pfQuads(pf){var j=judgeStyle((pf||{}).obs);return j.ready?j.cands:[];}
+
 /* ---------- 存储（server 后端 + git 多机同步；notes 为数组）---------- */
-var userRecipes=[], logs=[], notes=[], cases=[], frameworks=[];   /* notes:[{id,u,u_at,d,d_at}]; cases:[{id,recipeId,text}]; frameworks:[{id,fwId,fwVersion,title,answers,verdict,reason}] */
+var userRecipes=[], logs=[], notes=[], cases=[], frameworks=[], profiles=[];   /* notes:[{id,u,u_at,d,d_at}]; cases:[{id,recipeId,text}]; frameworks:[{id,fwId,fwVersion,title,answers,verdict,reason}] */
 var trueQuestionDraft=null;
 function api(method,path,body){
   return fetch(path,{method:method,headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined})
@@ -441,6 +562,7 @@ function loadAll(){
     notes=d.notes||[];
     cases=d.cases||[];
     frameworks=d.frameworks||[];
+    profiles=d.profiles||[];
   });
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
@@ -472,6 +594,7 @@ document.querySelectorAll("nav.tabs button").forEach(function(b){
     b.classList.add("on");
     document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on");});
     $("#"+b.dataset.tab).classList.add("on");
+    if(b.dataset.tab==="people")renderPeople();
     if(b.dataset.tab==="review")renderReview();
     if(b.dataset.tab==="compose")renderCompose();
   };
@@ -886,13 +1009,216 @@ $("#formSave").onclick=function(){
 };
 
 /* ---------- 话术 ---------- */
-var state={recipeId:null,base:{who:"",ask:"",raw:""},mind:{care:"",fear:"",state:"",result:""},slots:{},free:"",dirty:false};
+/* ---------- 识人：画像列表 / 编辑器 / AI 判断提示词 ---------- */
+var pfEditId=null;   /* null=只看列表  ""=新建  <id>=编辑 */
+var pfDraft=null;    /* 编辑中的临时对象，未保存不进 profiles */
+
+function quadCard(q){
+  var Q=QUADS[q];if(!Q)return "";
+  return '<div class="pfverdict">'+
+    '<div class="vh"><span class="qbadge" data-q="'+q+'">'+q+'</span><span class="vaxis">'+Q.axis+' · '+Q.one+'</span></div>'+
+    '<div class="vwant">'+esc(Q.want)+'</div>'+
+    '<div class="pfcols">'+
+      '<div class="do"><div class="ch">这样递</div><ul>'+Q.dos.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")+'</ul></div>'+
+      '<div class="dont"><div class="ch">别这样</div><ul>'+Q.donts.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")+'</ul></div>'+
+    '</div>'+
+    '<div class="pfmedia">载体：<b>'+esc(Q.media)+'</b></div>'+
+  '</div>';
+}
+function verdictHtml(obs){
+  var j=judgeStyle(obs);
+  var h='<div class="tip">已答 任务轴 '+j.t.n+'/4（选“任务侧” '+j.t.a+' 次）· 节奏轴 '+j.p.n+'/4（选“快” '+j.p.a+' 次）</div>';
+  if(j.note)h+='<div class="pfmix">'+esc(j.note)+'</div>';
+  if(j.ready)j.cands.forEach(function(q){h+=quadCard(q);});
+  return h;
+}
+function pfEditorHtml(){
+  var d=pfDraft||{};
+  var rows=OBS.map(function(o){
+    var v=(d.obs||{})[o.k]||"";
+    return '<div class="orow"><div class="oq">'+esc(o.q)+'</div><div class="opick">'+
+      '<button data-ok="'+o.k+'" data-ov="a" class="'+(v==="a"?"on":"")+'">'+esc(o.a)+'</button>'+
+      '<button data-ok="'+o.k+'" data-ov="b" class="'+(v==="b"?"on":"")+'">'+esc(o.b)+'</button>'+
+    '</div></div>';
+  }).join("");
+  return '<div class="pfcard">'+
+    '<div class="field"><label>是谁</label><input id="pf_name" value="'+esc(d.name||"")+'" placeholder="例：赵宁（直属上级）"></div>'+
+    '<div class="field"><label>关系（选填）</label><input id="pf_rel" value="'+esc(d.relation||"")+'" placeholder="上级 / 平级 / 下属 / 客户 / 面试官…"></div>'+
+    '<div class="np-l" style="margin-top:14px">按你<b>见过的行为</b>勾，没把握就空着——空着不扣分，瞎勾才会判歪</div>'+
+    '<div class="obs" id="pfObs">'+rows+'</div>'+
+    '<div id="pfVerdict">'+verdictHtml(d.obs)+'</div>'+
+    '<div class="field"><label>观察到的原话 / 行为（喂给 AI 判断用，越具体越准）</label>'+
+      '<textarea id="pf_ev" class="na" placeholder="例：5/19 我同步三件事，他只回“清楚是清楚了，就是进展慢”；会上从不听解释，只要加速承诺…">'+esc(d.evidence||"")+'</textarea></div>'+
+    '<div class="field"><label>特殊备注（不进象限，但每次都要记得的）</label>'+
+      '<textarea id="pf_sp" class="na" style="min-height:48px" placeholder="例：带宽不足会忘 → 口头聊完必须补一条书面；例：口头禅“慢”是噪声，看动作不看话">'+esc(d.special||"")+'</textarea></div>'+
+    '<div class="np-actions">'+
+      '<button class="btn" id="pfGen">让 Claude 判断风格</button>'+
+      '<button class="btn ghost" id="pfCancel">取消</button>'+
+      '<button class="btn pri" id="pfSave">保存</button>'+
+    '</div>'+
+    '<div class="diagbox hidden" id="pfDiag">'+
+      '<div class="np-hint">判断提示词已复制 → 贴进 Claude。复制失败就手选下面这段：</div>'+
+      '<textarea id="pfPromptBox" class="na pr" readonly></textarea>'+
+      '<label class="np-l">把 Claude 的判断贴回来（选填）</label>'+
+      '<textarea id="pf_ai" class="na" placeholder="粘贴风格判断…">'+esc(d.aiResult||"")+'</textarea>'+
+    '</div>'+
+  '</div>';
+}
+function pfCollect(){
+  return {
+    name:($("#pf_name")?$("#pf_name").value:"").trim(),
+    relation:($("#pf_rel")?$("#pf_rel").value:"").trim(),
+    obs:(pfDraft||{}).obs||{},
+    evidence:($("#pf_ev")?$("#pf_ev").value:"").trim(),
+    special:($("#pf_sp")?$("#pf_sp").value:"").trim(),
+    aiResult:($("#pf_ai")?$("#pf_ai").value:((pfDraft||{}).aiResult||"")),
+    styleVersion:STYLE_VERSION
+  };
+}
+function pfSyncDraftFromInputs(){
+  var c=pfCollect();
+  pfDraft=pfDraft||{};
+  pfDraft.name=c.name;pfDraft.relation=c.relation;
+  pfDraft.evidence=c.evidence;pfDraft.special=c.special;pfDraft.aiResult=c.aiResult;
+}
+function pfPrompt(){
+  var d=pfDraft||{},j=judgeStyle(d.obs);
+  var picked=OBS.filter(function(o){return (d.obs||{})[o.k];})
+    .map(function(o){return "- "+o.q+"：" + ((d.obs[o.k]==="a")?o.a:o.b);}).join("\n");
+  var mine=j.ready?("我的初判 = "+j.cands.join(" 或 ")):"我自己还判不出来";
+  return "我在判断一个人的沟通风格，好决定用什么方式跟他说话。请你当教练，只根据我给的行为证据判断。\n\n"+
+    "【这个人】"+(d.name||"（未填）")+"\n"+
+    (d.relation?"【关系】"+d.relation+"\n":"")+
+    (picked?"\n【我勾的行为观察】\n"+picked+"\n":"")+
+    (d.evidence?"\n【我记下的原话 / 具体行为】\n"+d.evidence+"\n":"")+
+    (d.special?"\n【已知特殊点】"+d.special+"\n":"")+
+    "\n【坐标系】两根轴交叉出四格：任务导向×快=老虎（要结论要控局）／人际×快=孔雀（要故事要认可）／人际×慢=考拉（要安全感怕被推）／任务×慢=猫头鹰（要证据链要口径）。\n"+
+    "【"+mine+"】\n\n"+
+    "请直接给，别客套：\n"+
+    "1) 你判他偏哪一格，依据是我给的哪几条行为（引出来）；混合体就说清楚主次；\n"+
+    "2) 我的初判哪里可能错，最该再观察哪一个具体行为来证伪；\n"+
+    "3) 跟他说话的三条具体递法：长度、载体、开场句怎么起；\n"+
+    "4) 一句话雷区。\n\n"+
+    "纪律（务必遵守）：\n"+
+    "- 只从我给的行为证据推。证据不够就直说不够，别替我编性格、别从名字或职级脑补。\n"+
+    "- 风格只决定「怎么递」（长度 / 载体 / 开场），不决定「说什么」——别给我内容建议。\n"+
+    "- 这是行为归类不是人格判决，别下“这人就是XX型的人”这种定性结论。";
+}
+function bindPfEditor(){
+  var box=$("#pfEditor");if(!box)return;
+  box.querySelectorAll("#pfObs button").forEach(function(b){
+    b.onclick=function(){
+      pfSyncDraftFromInputs();
+      pfDraft.obs=pfDraft.obs||{};
+      var k=b.dataset.ok;
+      pfDraft.obs[k]=(pfDraft.obs[k]===b.dataset.ov)?"":b.dataset.ov;   /* 再点一次=取消 */
+      box.querySelectorAll('#pfObs button[data-ok="'+k+'"]').forEach(function(x){
+        x.classList.toggle("on",x.dataset.ov===pfDraft.obs[k]);
+      });
+      $("#pfVerdict").innerHTML=verdictHtml(pfDraft.obs);
+    };
+  });
+  $("#pfCancel").onclick=function(){pfEditId=null;pfDraft=null;renderPeople();};
+  $("#pfGen").onclick=function(){
+    pfSyncDraftFromInputs();
+    if(!pfDraft.name){toast("先填是谁");return;}
+    var t=pfPrompt();$("#pfDiag").classList.remove("hidden");$("#pfPromptBox").value=t;copy(t);
+  };
+  $("#pfSave").onclick=function(){
+    var c=pfCollect();
+    if(!c.name){toast("先填是谁");return;}
+    if(pfEditId){
+      c.id=pfEditId;
+      profiles=profiles.map(function(x){return x.id===pfEditId?Object.assign({},x,c):x;});
+      api("PATCH","/profiles/"+pfEditId,c).then(function(){pfEditId=null;pfDraft=null;renderPeople();toast("已保存");});
+    }else{
+      api("POST","/profiles",c).then(function(saved){profiles.push(saved);pfEditId=null;pfDraft=null;renderPeople();toast("已保存");});
+    }
+  };
+}
+function renderPeople(){
+  var ed=$("#pfEditor"),list=$("#pfList");
+  if(!ed||!list)return;
+  if(pfEditId===null){
+    ed.innerHTML="";
+    if(!profiles.length){
+      list.innerHTML='<div class="empty">还没有画像。<br>先建一个你常打交道的人——勾 8 条行为观察，它给你「跟他该怎么递」。</div>';
+      return;
+    }
+    list.innerHTML=profiles.slice().sort(function(a,b){return (b.updated_at||"").localeCompare(a.updated_at||"");})
+      .map(function(pf){
+        var qs=pfQuads(pf);
+        var badges=qs.length?qs.map(function(q){return '<span class="qbadge'+(qs.length>1?" sm":"")+'" data-q="'+q+'">'+q+'</span>';}).join(" ")
+                            :'<span class="prel">证据不足</span>';
+        var one=qs.length?QUADS[qs[0]].one:"再多观察几次";
+        return '<div class="pfcard"><div class="pt"><div class="pname">'+esc(pf.name)+
+          (pf.relation?'<span class="prel">'+esc(pf.relation)+'</span>':'')+'</div><div>'+badges+'</div></div>'+
+          '<div class="pone">'+esc(one)+'</div>'+
+          (pf.special?'<div class="pfmix">'+esc(pf.special)+'</div>':'')+
+          '<div class="pops">'+
+            '<button class="btn sm" data-pfopen="'+pf.id+'">打开 / 编辑</button>'+
+            '<button class="btn sm" data-pfuse="'+pf.id+'">拿去写话术</button>'+
+            '<button class="btn sm ghost" data-pfdel="'+pf.id+'">删除</button>'+
+          '</div></div>';
+      }).join("");
+    list.querySelectorAll("[data-pfopen]").forEach(function(b){
+      b.onclick=function(){pfEditId=b.dataset.pfopen;pfDraft=Object.assign({},pfOf(pfEditId));pfDraft.obs=Object.assign({},pfDraft.obs||{});renderPeople();};
+    });
+    list.querySelectorAll("[data-pfuse]").forEach(function(b){
+      b.onclick=function(){gotoComposeWith(b.dataset.pfuse);};
+    });
+    list.querySelectorAll("[data-pfdel]").forEach(function(b){
+      b.onclick=function(){
+        if(!confirm("删除这个画像？"))return;
+        var id=b.dataset.pfdel;profiles=profiles.filter(function(x){return x.id!==id;});
+        api("DELETE","/profiles/"+id);renderPeople();
+      };
+    });
+  }else{
+    list.innerHTML="";
+    ed.innerHTML=pfEditorHtml();
+    bindPfEditor();
+  }
+}
+$("#newPfBtn").onclick=function(){pfEditId="";pfDraft={obs:{}};renderPeople();};
+
+var state={recipeId:null,pfId:"",base:{who:"",ask:"",raw:""},mind:{care:"",fear:"",state:"",result:""},slots:{},free:"",dirty:false};
 function gotoCompose(id){
   state.recipeId=id;state.slots={};state.free="";state.dirty=false;
   document.querySelectorAll("nav.tabs button").forEach(function(x){x.classList.toggle("on",x.dataset.tab==="compose");});
   document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on");});
   $("#compose").classList.add("on");
   renderCompose();
+}
+function gotoComposeWith(pfId){
+  var pf=pfOf(pfId);if(!pf)return;
+  state.pfId=pfId;
+  if(!state.base.who)state.base.who=pf.name+(pf.relation?("（"+pf.relation+"）"):"");
+  document.querySelectorAll("nav.tabs button").forEach(function(x){x.classList.toggle("on",x.dataset.tab==="compose");});
+  document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on");});
+  $("#compose").classList.add("on");
+  renderCompose();
+}
+function renderPfSel(){
+  var sel=$("#pfSel");if(!sel)return;
+  sel.innerHTML='<option value="">（不带入）</option>'+profiles.map(function(pf){
+    var qs=pfQuads(pf);
+    return '<option value="'+pf.id+'">'+esc(pf.name)+(qs.length?"  ·  "+qs.join("/"):"")+'</option>';
+  }).join("");
+  sel.value=state.pfId||"";
+  renderPfHint();
+}
+function renderPfHint(){
+  var box=$("#pfHint");if(!box)return;
+  var pf=state.pfId?pfOf(state.pfId):null;
+  if(!pf){box.classList.add("hidden");box.innerHTML="";return;}
+  var qs=pfQuads(pf);
+  var h=qs.length
+    ? qs.map(function(q){var Q=QUADS[q];return "<b>"+q+"</b>（"+Q.axis+"）→ "+esc(Q.dos[0])+"；载体："+esc(Q.media);}).join("<br>")
+    : "这个人还没判出象限（证据不足）——先去识人补几条观察。";
+  if(pf.special)h+='<br>⚠️ '+esc(pf.special);
+  h+='<br><span style="color:var(--hint)">风格只管怎么递，内容还是按上面填的诉求走。</span>';
+  box.innerHTML=h;box.classList.remove("hidden");
 }
 function renderRecipeSel(){
   var sel=$("#recipeSel");
@@ -916,6 +1242,7 @@ function syncMindInputs(){
   $("#m_fear").value=state.mind.fear;
   $("#m_state").value=state.mind.state;
   $("#mindResultBox").value=state.mind.result;
+  renderPfSel();
 }
 function renderCompose(){
   renderRecipeSel();
@@ -994,7 +1321,20 @@ function mindPrompt(){
     (m.care?"【我猜TA在乎】"+m.care+"\n":"")+
     (m.fear?"【我猜TA担心 / 讨厌】"+m.fear+"\n":"")+
     (m.state?"【TA现在的状态】"+m.state+"\n":"")+
+    pfPromptBlock()+
     "\n请直接给我，别客套：1) 对方此刻最可能的真实诉求和顾虑；2) 我这个请求在对方眼里的好处和代价；3) 最该用哪一招（投其所好 / 儆其所恶 / 选择的自由 / 被认可欲 / 非你不可 / 团队化 / 感谢），为什么；4) 一句话切入示范。";
+}
+function pfPromptBlock(){
+  var pf=state.pfId?pfOf(state.pfId):null;if(!pf)return "";
+  var qs=pfQuads(pf);var out="";
+  if(qs.length){
+    out+="【对方的沟通风格】"+qs.join(" / ")+"（"+qs.map(function(q){return QUADS[q].axis;}).join(" · ")+"）——"+QUADS[qs[0]].one+"\n";
+    out+="【对他的递法】"+QUADS[qs[0]].dos.join("；")+"。载体："+QUADS[qs[0]].media+"\n";
+  }
+  if(pf.special)out+="【他的特殊点】"+pf.special+"\n";
+  if(pf.evidence)out+="【我观察到的行为】"+pf.evidence+"\n";
+  if(out)out+="（风格只影响措辞的长度 / 载体 / 开场，不影响内容该说什么——内容按上面的诉求推。）\n";
+  return out;
 }
 function bindMind(){
   $("#m_who").oninput=function(){state.base.who=this.value;syncOut();};
@@ -1003,6 +1343,15 @@ function bindMind(){
   $("#m_fear").oninput=function(){state.mind.fear=this.value;};
   $("#m_state").oninput=function(){state.mind.state=this.value;};
   $("#mindResultBox").oninput=function(){state.mind.result=this.value;};
+  $("#pfSel").onchange=function(){
+    state.pfId=this.value;
+    var pf=state.pfId?pfOf(state.pfId):null;
+    if(pf&&!state.base.who.trim()){
+      state.base.who=pf.name+(pf.relation?("（"+pf.relation+"）"):"");
+      $("#m_who").value=state.base.who;syncOut();
+    }
+    renderPfHint();
+  };
 }
 $("#mindBtn").onclick=function(){
   if(!state.base.who&&!state.base.ask){toast("先填对谁说 / 想让TA做");return;}
@@ -1083,7 +1432,7 @@ function fmtTime(iso){try{var d=new Date(iso);return (d.getMonth()+1)+"/"+d.getD
 
 /* ---------- 导出 / 导入 ---------- */
 $("#exportBtn").onclick=function(){
-  var data=JSON.stringify({recipes:userRecipes,logs:logs,notes:notes,cases:cases,exportedAt:new Date().toISOString()},null,2);
+  var data=JSON.stringify({recipes:userRecipes,logs:logs,notes:notes,cases:cases,frameworks:frameworks,profiles:profiles,exportedAt:new Date().toISOString()},null,2);
   var blob=new Blob([data],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="对味备份_"+new Date().toISOString().slice(0,10)+".json";a.click();
@@ -1099,7 +1448,10 @@ $("#importFile").onchange=function(){
       if(!confirm("导入会替换当前的自定义配方、复盘记录和理解/诊断，继续？"))return;
       var impN=d.notes;
       if(impN&&!Array.isArray(impN)){var arr=[];for(var k in impN){arr.push({id:k,u:(impN[k]||{}).u||"",d:(impN[k]||{}).d||""});}impN=arr;}
-      api("POST","/import",{recipes:d.recipes||[],logs:d.logs||[],notes:impN||[],cases:d.cases||[]}).then(function(){return loadAll();}).then(function(){renderLib();renderReview();toast("已导入");});
+      var body={recipes:d.recipes||[],logs:d.logs||[],notes:impN||[]};
+      /* 只带备份文件里真有的 collection——老备份没有 cases/frameworks/profiles，不能替换成空 */
+      ["cases","frameworks","profiles"].forEach(function(k){if(Array.isArray(d[k]))body[k]=d[k];});
+      api("POST","/import",body).then(function(){return loadAll();}).then(function(){renderLib();renderPeople();renderReview();toast("已导入");});
     }catch(e){toast("文件格式不对");}
   };
   rd.readAsText(f);this.value="";
