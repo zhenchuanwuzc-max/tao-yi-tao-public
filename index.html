@@ -203,6 +203,16 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box
 .tq-verdict[data-v="真问题"]{color:var(--bad)}.tq-verdict[data-v="待验证"]{color:var(--warn)}.tq-verdict[data-v="假问题"]{color:var(--ok)}
 .tq-empty{padding:22px 14px;text-align:center;color:var(--hint);font-size:12px;border:.5px dashed var(--line2);border-radius:9px}
 /* 识人 */
+.qc{max-width:400px;margin:0 auto 4px}
+.qc-ax{font-size:11px;color:var(--hint);text-align:center;letter-spacing:.5px}
+.qc-mid{display:flex;align-items:center;gap:7px;margin:5px 0}
+.qc-side{font-size:11px;color:var(--hint);writing-mode:vertical-rl;text-align:center;letter-spacing:2px;flex:none}
+.qc-side.l{transform:rotate(180deg)}
+.qchart{flex:1;width:100%;height:auto;display:block}
+.qchart .qname{font-size:13px;font-weight:600}
+.qchart .qsub{font-size:9.5px}
+.qc-none{font-size:12px;color:var(--hint);text-align:center;margin-top:6px}
+
 .pf-warn{font-size:12px;line-height:1.65;color:var(--warn);background:var(--warn-bg);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:14px}
 .pf-warn b{font-weight:600}
 .pfcard{background:var(--surface);border:.5px solid var(--line2);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px}
@@ -1013,6 +1023,50 @@ $("#formSave").onclick=function(){
 var pfEditId=null;   /* null=只看列表  ""=新建  <id>=编辑 */
 var pfDraft=null;    /* 编辑中的临时对象，未保存不进 profiles */
 
+/* 2×2 象限图：四格 + 这个人落点。落点是连续坐标——越贴角越典型，越靠中间越混合。 */
+function quadChart(obs,name){
+  var j=judgeStyle(obs);
+  var hit=j.ready?j.cands:[];
+  var G=[  /* x,y = 格子左上角；q = 象限名 */
+    {q:"孔雀",  x:0,  y:0,  bg:"var(--warn-bg)",  fg:"var(--warn)"},
+    {q:"老虎",  x:150,y:0,  bg:"var(--bad-bg)",   fg:"var(--bad)"},
+    {q:"考拉",  x:0,  y:150,bg:"var(--ok-bg)",    fg:"var(--ok)"},
+    {q:"猫头鹰",x:150,y:150,bg:"var(--accent-bg)",fg:"var(--accent-text)"}
+  ];
+  var cells=G.map(function(g){
+    var on=hit.indexOf(g.q)>=0;
+    return '<rect x="'+g.x+'" y="'+g.y+'" width="150" height="150" fill="'+g.bg+'"'+
+             (on?' stroke="'+g.fg+'" stroke-width="2.5"':' opacity=".55"')+'/>'+
+           '<text class="qname" x="'+(g.x+75)+'" y="'+(g.y+70)+'" text-anchor="middle" fill="'+g.fg+'"'+
+             (on?'':' opacity=".5"')+'>'+g.q+'</text>'+
+           '<text class="qsub" x="'+(g.x+75)+'" y="'+(g.y+88)+'" text-anchor="middle" fill="'+g.fg+'" opacity="'+(on?".75":".38")+'">'+
+             esc(QUADS[g.q].one)+'</text>';
+  }).join("");
+  var dot="",tag="";
+  if(j.t.n||j.p.n){
+    var tr=j.t.n?j.t.a/j.t.n:0.5, pr=j.p.n?j.p.a/j.p.n:0.5;
+    var cx=18+tr*264, cy=18+(1-pr)*264;
+    var faint=(!j.t.n||!j.p.n)?' opacity=".45"':'';
+    dot='<g'+faint+'><circle cx="'+cx+'" cy="'+cy+'" r="9" fill="var(--surface)" stroke="var(--text)" stroke-width="2"/>'+
+        '<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="var(--text)"/></g>';
+    if(name)tag='<text x="'+cx+'" y="'+(cy>270?cy-16:cy+24)+'" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--text)"'+faint+'>'+esc(name)+'</text>';
+  }
+  return '<div class="qc">'+
+    '<div class="qc-ax">快 · 主动</div>'+
+    '<div class="qc-mid">'+
+      '<div class="qc-side l">人际导向</div>'+
+      '<svg class="qchart" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">'+
+        cells+
+        '<line x1="150" y1="0" x2="150" y2="300" stroke="var(--line2)" stroke-width="1"/>'+
+        '<line x1="0" y1="150" x2="300" y2="150" stroke="var(--line2)" stroke-width="1"/>'+
+        dot+tag+
+      '</svg>'+
+      '<div class="qc-side">任务导向</div>'+
+    '</div>'+
+    '<div class="qc-ax">慢 · 谨慎</div>'+
+    (j.t.n||j.p.n?'':'<div class="qc-none">还没勾行为——先答下面的问题，点会落到图上</div>')+
+  '</div>';
+}
 function quadCard(q){
   var Q=QUADS[q];if(!Q)return "";
   return '<div class="pfverdict">'+
@@ -1044,7 +1098,8 @@ function pfEditorHtml(){
   return '<div class="pfcard">'+
     '<div class="field"><label>是谁</label><input id="pf_name" value="'+esc(d.name||"")+'" placeholder="例：赵宁（直属上级）"></div>'+
     '<div class="field"><label>关系（选填）</label><input id="pf_rel" value="'+esc(d.relation||"")+'" placeholder="上级 / 平级 / 下属 / 客户 / 面试官…"></div>'+
-    '<div class="np-l" style="margin-top:14px">按你<b>见过的行为</b>勾，没把握就空着——空着不扣分，瞎勾才会判歪</div>'+
+    '<div id="pfChart">'+quadChart(d.obs,d.name)+'</div>'+
+    '<div class="np-l" style="margin-top:16px">按你<b>见过的行为</b>勾，没把握就空着——空着不扣分，瞎勾才会判歪</div>'+
     '<div class="obs" id="pfObs">'+rows+'</div>'+
     '<div id="pfVerdict">'+verdictHtml(d.obs)+'</div>'+
     '<div class="field"><label>观察到的原话 / 行为（喂给 AI 判断用，越具体越准）</label>'+
@@ -1115,9 +1170,15 @@ function bindPfEditor(){
       box.querySelectorAll('#pfObs button[data-ok="'+k+'"]').forEach(function(x){
         x.classList.toggle("on",x.dataset.ov===pfDraft.obs[k]);
       });
+      $("#pfChart").innerHTML=quadChart(pfDraft.obs,pfDraft.name);
       $("#pfVerdict").innerHTML=verdictHtml(pfDraft.obs);
     };
   });
+  var nameInput=$("#pf_name");
+  if(nameInput)nameInput.oninput=function(){
+    pfDraft=pfDraft||{};pfDraft.name=this.value;
+    $("#pfChart").innerHTML=quadChart(pfDraft.obs,pfDraft.name);
+  };
   $("#pfCancel").onclick=function(){pfEditId=null;pfDraft=null;renderPeople();};
   $("#pfGen").onclick=function(){
     pfSyncDraftFromInputs();
