@@ -61,7 +61,7 @@ class TrueQuestionFrameworkTests(unittest.TestCase):
         self.assertIn('id:"fw_industry"', HTML)
         self.assertIn('verdicts:["重仓","观望","撤损"]', HTML)
         data = (Path.home() / "tao-yi-tao-data" / "data.json").read_text(encoding="utf-8")
-        self.assertIn("GGS金物流", data)
+        self.assertIn("旧行业判断", data)
 
 
 if __name__ == "__main__":
@@ -274,7 +274,7 @@ git -C ~/tao-yi-tao-data status --short
 curl -sf http://127.0.0.1:8774/data | python3 -c 'import json,sys; d=json.load(sys.stdin); xs=[x for x in d["frameworks"] if x["fwId"]=="fw_industry"]; print(len(xs), [x["title"] for x in xs])'
 ```
 
-Expected: no new data-repo change from this feature; output still lists the two `GGS金物流` industry snapshots.
+Expected: no new data-repo change from this feature; output still lists the two `旧行业判断` industry snapshots.
 
 - [ ] **Step 5: Commit release metadata**
 

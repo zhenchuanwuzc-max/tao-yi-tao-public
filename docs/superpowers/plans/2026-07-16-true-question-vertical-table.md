@@ -12,7 +12,7 @@
 
 - Use the approved B layout: white background, thin gray lines, shallow gray label column, one purple accent line, no large purple blocks.
 - Fields run vertically; do not add horizontal scrolling.
-- Industry analysis and its two GGS snapshots remain unchanged.
+- Industry analysis and its two legacy industry snapshots remain unchanged.
 - Edits never autosave. Save is explicit per question.
 - New drafts do not touch `/frameworks` until Save.
 - Reuse `/frameworks`; do not change `server.py` or the sync model.
@@ -318,11 +318,11 @@ curl -sf http://127.0.0.1:8774/data | python3 -c 'import json,sys;d=json.load(sy
 git -C ~/tao-yi-tao-data status --short
 ```
 
-Expected: two `GGS金物流` records remain and the data repo is clean before UI write testing.
+Expected: two `旧行业判断` records remain and the data repo is clean before UI write testing.
 
 - [ ] **Step 4: Verify the live app visually**
 
-In the native 对味 app: refresh, open 框架, confirm industry card and both GGS rows remain; confirm true-question section is a vertical two-column sheet with no horizontal scrollbar; create a draft, fill all select types, generate a prompt without saving, cancel, and confirm `/data` still contains zero `fw_true_question` records.
+In the native 对味 app: refresh, open 框架, confirm industry card and both legacy industry rows remain; confirm true-question section is a vertical two-column sheet with no horizontal scrollbar; create a draft, fill all select types, generate a prompt without saving, cancel, and confirm `/data` still contains zero `fw_true_question` records.
 
 - [ ] **Step 5: Commit release metadata**
 
