@@ -30,7 +30,10 @@ class TrueQuestionFrameworkTests(unittest.TestCase):
         data_file = Path.home() / "tao-yi-tao-data" / "data.json"
         if not data_file.exists():
             self.skipTest("本机没有数据仓，跳过真实数据检查")
-        self.assertIn("GGS金物流", data_file.read_text(encoding="utf-8"))
+        import json
+        frameworks = json.loads(data_file.read_text(encoding="utf-8")).get("frameworks", [])
+        self.assertTrue(any(f.get("fwId") == "fw_industry" for f in frameworks),
+                        "旧的行业判断记录应仍然存在")
 
 
 if __name__ == "__main__":
