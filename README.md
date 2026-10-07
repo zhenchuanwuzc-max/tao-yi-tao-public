@@ -28,6 +28,17 @@ bash ~/tao-yi-tao/install.sh                # 配 launchd 自启 + 打原生 .ap
 
 双击 `~/Applications/对味.app`（或拖进 Dock）即开一个**独立原生窗口**——有自己的 Dock 图标、Cmd+Tab 单独切、跟浏览器隔离。也可直接浏览器开 http://localhost:8774 。
 
+## 上线：scripts/release.sh
+
+```bash
+scripts/release.sh              # 跑全部测试 → 全过才重启线上服务(launchd com.ocean.tao) → 10 秒内轮询首页/health/data
+scripts/release.sh --no-restart # 只跑测试，不碰线上服务
+```
+
+- 测试在 `tests/`（`python3 -m unittest discover -s tests`）。`test_smoke.py` 用**临时目录 + 随机端口**起真实 server 子进程，走一遍主流程（首页 / 读数据 / 写复盘等 / 导出备份与导入还原 / 停服重起数据仍在），不碰真实数据仓、不触发 git 同步。
+- 任一测试失败 → exit 非 0，**不重启**；重启后线上没起来 → macOS 通知 + exit 非 0。
+- 原生壳只是开窗口加载 localhost，重启 server 后在窗口里按 Cmd+R 即拿到新页面；仅 `tao-shell.swift` 改动才需重跑 `install.sh` 重打壳（脚本会提示）。
+
 ## 设计取向
 
 - 单人自用、数据量小、低频写——所以选「逐条 union 合并、零数据丢失」，而不是更重的 CRDT。
